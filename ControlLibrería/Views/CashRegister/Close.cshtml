@@ -1,0 +1,125 @@
+@model ControlLibrería.Models.ViewModels.CashRegisterSummaryViewModel
+@{
+    ViewData["Title"] = "Cerrar Caja";
+    var expectedCash = Model.CashRegister.OpeningBalance + Model.TotalCash;
+}
+
+<header class="w-full bg-white/80 dark:bg-[#1a2632]/90 backdrop-blur-md sticky top-0 z-10 border-b border-[#dbe0e6] dark:border-gray-800 px-6 py-4">
+    <div class="flex items-center gap-4 max-w-[1000px] mx-auto">
+        <a asp-action="Index" class="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400">
+            <span class="material-symbols-outlined">arrow_back</span>
+        </a>
+        <div>
+            <h2 class="text-[#111418] dark:text-white text-xl font-bold leading-tight">Cerrar Caja - Arqueo</h2>
+            <p class="text-[#617589] dark:text-gray-400 text-sm">Realiza el conteo físico y cierra la sesión</p>
+        </div>
+    </div>
+</header>
+
+<div class="p-6">
+    <div class="max-w-[1000px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Summary Card -->
+        <div class="bg-white dark:bg-[#1a2632] rounded-3xl border border-[#dbe0e6] dark:border-gray-800 shadow-sm p-6">
+            <h3 class="text-lg font-bold text-[#111418] dark:text-white mb-6">Resumen de la Sesión</h3>
+            
+            <div class="space-y-4">
+                <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Apertura</span>
+                    <span class="text-sm font-bold text-[#111418] dark:text-white">@Model.CashRegister.OpenedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                </div>
+                
+                <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Usuario</span>
+                    <span class="text-sm font-bold text-[#111418] dark:text-white">@(Model.CashRegister.User?.DisplayName ?? "Usuario")</span>
+                </div>
+                
+                <div class="flex justify-between items-center p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20">
+                    <span class="text-sm font-bold text-blue-900 dark:text-blue-400">Monto Inicial</span>
+                    <span class="text-lg font-bold text-blue-900 dark:text-blue-400">Q @Model.CashRegister.OpeningBalance.ToString("N2")</span>
+                </div>
+                
+                <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <p class="text-xs font-bold text-gray-400 uppercase mb-3">Ventas del Día</p>
+                    
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-green-600 text-[18px]">payments</span>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Efectivo</span>
+                            </div>
+                            <span class="text-sm font-bold text-green-600">Q @Model.TotalCash.ToString("N2")</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-blue-600 text-[18px]">credit_card</span>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Tarjeta</span>
+                            </div>
+                            <span class="text-sm font-bold text-blue-600">Q @Model.TotalCard.ToString("N2")</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-purple-600 text-[18px]">account_balance</span>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Transferencia</span>
+                            </div>
+                            <span class="text-sm font-bold text-purple-600">Q @Model.TotalTransfer.ToString("N2")</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-between items-center p-4 rounded-xl bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-900/50">
+                    <span class="text-sm font-bold text-green-900 dark:text-green-400">Efectivo Esperado</span>
+                    <span class="text-2xl font-bold text-green-900 dark:text-green-400">Q @expectedCash.ToString("N2")</span>
+                </div>
+                
+                <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Total Transacciones</span>
+                    <span class="text-sm font-bold text-[#111418] dark:text-white">@Model.TransactionCount</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Closing Form -->
+        <div class="bg-white dark:bg-[#1a2632] rounded-3xl border border-[#dbe0e6] dark:border-gray-800 shadow-sm p-6">
+            <h3 class="text-lg font-bold text-[#111418] dark:text-white mb-6">Arqueo de Caja</h3>
+            
+            <form asp-action="CloseConfirmed" asp-route-id="@Model.CashRegister.Id" method="post">
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-[#111418] dark:text-white mb-2">Conteo Físico de Efectivo</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">Q</span>
+                        <input name="actualBalance" type="number" step="0.01" min="0" value="@expectedCash" class="w-full h-14 rounded-xl bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 pl-10 pr-4 text-lg font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary" required />
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Cuenta todo el efectivo físico en la caja (billetes y monedas)</p>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-[#111418] dark:text-white mb-2">Notas de Cierre (Opcional)</label>
+                    <textarea name="closingNotes" rows="3" class="w-full rounded-xl bg-gray-50 dark:bg-gray-800 border-none px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20" placeholder="Observaciones del cierre..."></textarea>
+                </div>
+
+                <div class="p-4 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/50 mb-6">
+                    <div class="flex items-start gap-3">
+                        <span class="material-symbols-outlined text-yellow-600 dark:text-yellow-400 text-[24px]">warning</span>
+                        <div>
+                            <p class="text-sm font-bold text-yellow-900 dark:text-yellow-400 mb-1">Atención</p>
+                            <p class="text-xs text-yellow-700 dark:text-yellow-500">Una vez cerrada la caja, no podrás modificar los datos. Verifica bien el conteo de efectivo.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3">
+                    <a asp-action="Index" class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold py-3 px-8 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-all">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="bg-red-600 text-white font-bold py-3 px-8 rounded-xl shadow-xl shadow-red-500/30 hover:bg-red-700 hover:-translate-y-0.5 transition-all flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[20px]">lock</span>
+                        Cerrar Caja
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

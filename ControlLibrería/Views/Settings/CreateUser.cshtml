@@ -1,0 +1,69 @@
+@model ControlLibrería.Models.ViewModels.UserCreateViewModel
+
+@{
+    ViewData["Title"] = "Crear Usuario";
+}
+
+<div class="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 dark:bg-gray-900 sm:px-6 lg:px-8">
+    <div class="w-full max-w-md space-y-8 rounded-xl bg-white p-10 shadow-xl dark:bg-[#1a2632]">
+        <div>
+            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+                <span class="material-symbols-outlined text-blue-600 dark:text-blue-400">person_add</span>
+            </div>
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+                Crear Nuevo Usuario
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+                Registra un nuevo empleado en el sistema
+            </p>
+        </div>
+        <form class="mt-8 space-y-6" asp-action="CreateUser" method="post">
+            @Html.AntiForgeryToken()
+            <div class="space-y-4 rounded-md shadow-sm">
+                <div>
+                    <label asp-for="EmployeeCode" class="sr-only">Código Empleado</label>
+                    <input asp-for="EmployeeCode" type="text" required class="relative block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400" placeholder="Código de Empleado (5 dígitos)">
+                    <span asp-validation-for="EmployeeCode" class="text-xs text-red-500"></span>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label asp-for="FirstName" class="sr-only">Nombre</label>
+                        <input asp-for="FirstName" type="text" required class="relative block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400" placeholder="Nombre">
+                        <span asp-validation-for="FirstName" class="text-xs text-red-500"></span>
+                    </div>
+                    <div>
+                        <label asp-for="LastName" class="sr-only">Apellido</label>
+                        <input asp-for="LastName" type="text" required class="relative block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400" placeholder="Apellido">
+                        <span asp-validation-for="LastName" class="text-xs text-red-500"></span>
+                    </div>
+                </div>
+                <div>
+                    <label asp-for="Email" class="sr-only">Correo Electrónico</label>
+                    <input asp-for="Email" type="email" required class="relative block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400" placeholder="Correo Electrónico">
+                    <span asp-validation-for="Email" class="text-xs text-red-500"></span>
+                </div>
+                <div>
+                    <label asp-for="Password" class="sr-only">Contraseña</label>
+                    <input asp-for="Password" type="password" required class="relative block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400" placeholder="Contraseña">
+                    <span asp-validation-for="Password" class="text-xs text-red-500"></span>
+                </div>
+                <div>
+                    <label asp-for="Role" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rol de Usuario</label>
+                    <select asp-for="Role" class="block w-full rounded-lg border border-gray-300 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500">
+                        <option value="Vendedor">Vendedor</option>
+                        <option value="Admin">Administrador</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex gap-4">
+                <a asp-action="Users" class="group relative flex w-full justify-center rounded-lg border border-transparent bg-gray-500 py-2 px-4 text-sm font-medium text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                    Cancelar
+                </a>
+                <button type="submit" class="group relative flex w-full justify-center rounded-lg border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Crear Usuario
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,55 @@
+@model ControlLibrería.Models.Entities.Category
+@{
+    ViewData["Title"] = "Detalle de Categoría";
+}
+
+<header class="w-full bg-white/80 dark:bg-[#1a2632]/90 backdrop-blur-md sticky top-0 z-10 border-b border-[#dbe0e6] dark:border-gray-800 px-6 py-4">
+    <div class="flex flex-wrap justify-between items-center gap-4 max-w-[800px] mx-auto">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-[#111418] dark:text-white text-2xl font-bold leading-tight">Detalle de Categoría</h2>
+            <p class="text-[#617589] dark:text-gray-400 text-sm font-normal">Información detallada del grupo de productos</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a asp-action="Index" class="flex items-center justify-center gap-2 rounded-lg border border-[#dbe0e6] bg-white px-4 py-2 text-sm font-medium text-[#111418] hover:bg-gray-50 dark:border-gray-800 dark:bg-surface-dark dark:text-white dark:hover:bg-gray-800 transition-colors">
+                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                Volver
+            </a>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white shadow-lg shadow-blue-500/20 transition-colors hover:bg-blue-600">
+                <span class="material-symbols-outlined text-[20px]">edit</span>
+                Editar
+            </a>
+        </div>
+    </div>
+</header>
+
+<div class="p-6">
+    <div class="mx-auto max-w-[600px] flex flex-col gap-6">
+        <div class="bg-white dark:bg-[#1a2632] rounded-3xl border border-[#dbe0e6] dark:border-gray-800 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-[#f0f2f4] dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 flex items-center gap-3">
+                <span class="material-symbols-outlined text-primary">category</span>
+                <h3 class="text-sm font-bold text-[#111418] dark:text-white uppercase tracking-wider">Datos de la Categoría</h3>
+            </div>
+            <div class="p-8 flex flex-col gap-6">
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-bold uppercase tracking-wider text-[#617589] dark:text-gray-500">Nombre</label>
+                    <p class="text-lg font-bold text-[#111418] dark:text-white">@Model.Name</p>
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-bold uppercase tracking-wider text-[#617589] dark:text-gray-500">Descripción</label>
+                    <p class="text-base text-[#111418] dark:text-gray-300 bg-[#f8fafc] dark:bg-gray-800/50 p-4 rounded-xl border border-transparent leading-relaxed">
+                        @(string.IsNullOrEmpty(Model.Description) ? "Sin descripción disponible." : Model.Description)
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-amber-50 dark:bg-amber-900/10 rounded-2xl p-6 border border-amber-100 dark:border-amber-900/30 flex items-start gap-4">
+            <span class="material-symbols-outlined text-amber-600 dark:text-amber-400">info</span>
+            <div class="flex flex-col gap-1">
+                <p class="text-sm font-bold text-amber-800 dark:text-amber-300">Resumen de Inventario</p>
+                <p class="text-sm text-amber-700 dark:text-amber-400">Esta categoría agrupa los productos relacionados para facilitar su búsqueda y reportes de ventas.</p>
+            </div>
+        </div>
+    </div>
+</div>

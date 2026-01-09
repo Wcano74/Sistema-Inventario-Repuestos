@@ -1,0 +1,94 @@
+@model IEnumerable<ControlLibrería.Models.Entities.Supplier>
+@{
+    ViewData["Title"] = "Proveedores";
+}
+
+<!-- Page Heading & Actions -->
+<header class="w-full bg-white/80 dark:bg-[#1a2632]/90 backdrop-blur-md sticky top-0 z-10 border-b border-[#dbe0e6] dark:border-gray-800 px-6 py-4">
+    <div class="flex flex-wrap justify-between items-center gap-4 max-w-[1400px] mx-auto">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-[#111418] dark:text-white text-2xl font-bold leading-tight">Proveedores</h2>
+            <p class="text-[#617589] dark:text-gray-400 text-sm font-normal">Gestiona tus socios comerciales y distribuidores</p>
+        </div>
+        <div class="flex items-center gap-3">
+            @if (ViewBag.CanEditStock == true)
+            {
+                <a asp-action="Create" class="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white shadow-lg shadow-blue-500/20 transition-colors hover:bg-blue-600">
+                    <span class="material-symbols-outlined text-[20px]">group_add</span>
+                    Nuevo Proveedor
+                </a>
+            }
+        </div>
+    </div>
+</header>
+
+<div class="p-6">
+    <div class="mx-auto flex max-w-[1400px] flex-col gap-6">
+        <div class="overflow-hidden rounded-xl border border-[#dbe0e6] bg-white shadow-sm dark:border-gray-800 dark:bg-[#1a2632]">
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[800px] text-left">
+                    <thead class="border-b border-[#dbe0e6] bg-gray-50 dark:border-gray-800 dark:bg-gray-800/50">
+                        <tr>
+                            <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Proveedor</th>
+                            <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Contacto</th>
+                            <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Teléfono</th>
+                            <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Email</th>
+                            <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#f0f2f4] dark:divide-gray-800">
+                        @foreach (var item in Model)
+                        {
+                            <tr class="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
+                                            <span class="material-symbols-outlined text-[20px]">local_shipping</span>
+                                        </div>
+                                        <span class="text-sm font-bold text-[#111418] dark:text-white">@item.Name</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm text-[#111418] dark:text-white">@item.ContactName</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-sm text-[#617589] dark:text-gray-400">@item.Phone</span>
+                                        @if (!string.IsNullOrEmpty(item.Phone))
+                                        {
+                                            <a href="https://wa.me/@(item.Phone.Replace(" ", "").Replace("-", "").Replace("+", ""))" target="_blank" class="text-green-500 hover:text-green-600 flex items-center" title="Contactar por WhatsApp">
+                                                <svg class="size-4 fill-current" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.438 9.889-9.886.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.44-9.889 9.888-.001 2.224.58 3.276 1.697 5.17l-.953 3.486 3.745-.96zm13.111-5.111c-.328-.164-1.942-.958-2.241-1.069-.3-.109-.519-.164-.738.164-.219.328-.847 1.069-1.039 1.287-.192.219-.383.246-.711.082s-1.383-.51-2.635-1.627c-.973-.867-1.631-1.939-1.822-2.267-.192-.328-.02-.505.145-.668.148-.146.328-.383.493-.574.164-.192.219-.328.328-.547.11-.219.055-.41-.028-.574-.082-.164-.738-1.777-1.011-2.434-.267-.641-.539-.553-.738-.563-.192-.01-.41-.011-.629-.011s-.574.082-.875.41c-.301.328-1.148 1.121-1.148 2.733s1.175 3.17 1.339 3.389c.164.219 2.313 3.532 5.603 4.956.782.339 1.393.541 1.87.693.785.249 1.5.214 2.066.129.631-.095 1.942-.793 2.216-1.558.274-.765.274-1.422.192-1.558-.083-.136-.301-.218-.629-.382z"/></svg>
+                                            </a>
+                                        }
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm text-[#617589] dark:text-gray-400">@item.Email</span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <div class="flex items-center justify-end gap-2 sm:opacity-0 transition-opacity group-hover:opacity-100">
+                                        @if (ViewBag.CanEditStock == true)
+                                        {
+                                            <a asp-action="Edit" asp-route-id="@item.Id" class="flex h-9 w-9 items-center justify-center rounded-lg border border-[#dbe0e6] bg-white text-[#617589] hover:border-primary hover:text-primary dark:border-gray-800 dark:bg-surface-dark transition-all" title="Editar">
+                                                <span class="material-symbols-outlined text-[18px]">edit</span>
+                                            </a>
+                                        }
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="flex h-9 w-9 items-center justify-center rounded-lg border border-[#dbe0e6] bg-white text-[#617589] hover:border-blue-500 hover:text-blue-500 dark:border-gray-800 dark:bg-surface-dark transition-all" title="Detalles">
+                                            <span class="material-symbols-outlined text-[18px]">visibility</span>
+                                        </a>
+                                        @if (ViewBag.CanEditStock == true)
+                                        {
+                                            <a asp-action="Delete" asp-route-id="@item.Id" class="flex h-9 w-9 items-center justify-center rounded-lg border border-[#dbe0e6] bg-white text-red-400 hover:border-red-500 hover:text-red-500 dark:border-gray-800 dark:bg-surface-dark transition-all" title="Eliminar">
+                                                <span class="material-symbols-outlined text-[18px]">delete</span>
+                                            </a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

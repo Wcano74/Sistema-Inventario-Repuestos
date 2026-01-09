@@ -1,0 +1,278 @@
+@model ControlLibrería.Models.ViewModels.SystemSettingsViewModel
+
+@{
+    ViewData["Title"] = "Configuración";
+}
+
+<header class="w-full bg-white/80 dark:bg-[#1a2632]/90 backdrop-blur-md sticky top-0 z-10 border-b border-[#dbe0e6] dark:border-gray-800 px-6 py-4">
+    <div class="flex flex-wrap justify-between items-center gap-4 max-w-[1400px] mx-auto">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-[#111418] dark:text-white text-2xl font-bold leading-tight">Configuración del Sistema</h2>
+            <p class="text-[#617589] dark:text-gray-400 text-sm font-normal">Administra todos los parámetros del negocio</p>
+        </div>
+        <div class="flex items-center gap-3">
+             <a asp-action="Users" class="flex items-center gap-2 rounded-lg bg-gray-100 dark:bg-gray-700 px-4 py-2 text-sm font-medium text-[#111418] dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                <span class="material-symbols-outlined text-[20px]">group</span>
+                Gestionar Usuarios
+            </a>
+            <button type="submit" form="settingsForm" class="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white shadow-lg shadow-blue-500/20 transition-colors hover:bg-blue-600">
+                <span class="material-symbols-outlined text-[20px]">save</span>
+                Guardar Cambios
+            </button>
+        </div>
+    </div>
+</header>
+
+<div class="p-6">
+    <div class="mx-auto flex max-w-[1000px] flex-col gap-6">
+        <form id="settingsForm" asp-action="Index" method="post">
+            @Html.AntiForgeryToken()
+
+            <!-- Información General -->
+            <div class="overflow-hidden rounded-xl border border-[#dbe0e6] bg-white shadow-sm dark:border-gray-800 dark:bg-[#1a2632]">
+                <div class="border-b border-[#dbe0e6] bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-800/50">
+                    <h3 class="text-base font-bold text-[#111418] dark:text-white flex items-center gap-2">
+                        <span class="material-symbols-outlined">store</span> Información del Negocio
+                    </h3>
+                </div>
+                <div class="p-6 grid gap-6 md:grid-cols-2">
+                    <div class="md:col-span-2">
+                        <label asp-for="LibraryName" class="mb-2 block text-sm font-bold text-[#111418] dark:text-white">Nombre del Negocio</label>
+                        <input asp-for="LibraryName" class="w-full rounded-lg border border-[#dbe0e6] bg-white p-2.5 text-sm text-[#111418] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+                    </div>
+                    <div>
+                        <label asp-for="LibraryAddress" class="mb-2 block text-sm font-bold text-[#111418] dark:text-white">Dirección</label>
+                        <input asp-for="LibraryAddress" class="w-full rounded-lg border border-[#dbe0e6] bg-white p-2.5 text-sm text-[#111418] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+                    </div>
+                    <div>
+                        <label asp-for="LibraryPhone" class="mb-2 block text-sm font-bold text-[#111418] dark:text-white">Teléfono</label>
+                        <input asp-for="LibraryPhone" class="w-full rounded-lg border border-[#dbe0e6] bg-white p-2.5 text-sm text-[#111418] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+                    </div>
+                    <div>
+                        <label asp-for="LibraryNIT" class="mb-2 block text-sm font-bold text-[#111418] dark:text-white">NIT</label>
+                        <input asp-for="LibraryNIT" class="w-full rounded-lg border border-[#dbe0e6] bg-white p-2.5 text-sm text-[#111418] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+                    </div>
+                    <div class="md:col-span-2">
+                         <label asp-for="ReceiptMessage" class="mb-2 block text-sm font-bold text-[#111418] dark:text-white">Mensaje en Ticket</label>
+                        <input asp-for="ReceiptMessage" class="w-full rounded-lg border border-[#dbe0e6] bg-white p-2.5 text-sm text-[#111418] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+                        <span class="mt-1 block text-xs text-[#617589] dark:text-gray-400">Mensaje de despedida o agradecimiento al final de la factura.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WhatsApp & Notificaciones -->
+            <div class="overflow-hidden rounded-xl border border-[#dbe0e6] bg-white shadow-sm dark:border-gray-800 dark:bg-[#1a2632]">
+                <div class="border-b border-[#dbe0e6] bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-800/50">
+                    <h3 class="text-base font-bold text-[#111418] dark:text-white flex items-center gap-2">
+                        <span class="material-symbols-outlined">chat</span> Notificaciones WhatsApp
+                    </h3>
+                </div>
+                <div class="p-6 grid gap-6">
+                    <div class="flex items-center justify-between">
+                         <div>
+                            <label class="font-medium text-[#111418] dark:text-white">Habilitar Alertas</label>
+                            <p class="text-xs text-[#617589] dark:text-gray-400">Enviar alertas de stock bajo y cierre de caja por WhatsApp.</p>
+                        </div>
+                        <label class="relative inline-flex cursor-pointer items-center">
+                            <input type="checkbox" asp-for="WhatsAppAlertsEnabled" class="peer sr-only">
+                            <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-green-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:bg-gray-700 dark:border-gray-600"></div>
+                        </label>
+                    </div>
+                     <div>
+                        <label asp-for="WhatsAppNumber" class="mb-2 block text-sm font-bold text-[#111418] dark:text-white">Número de WhatsApp (Notificaciones)</label>
+                        <input asp-for="WhatsAppNumber" class="w-full max-w-[300px] rounded-lg border border-[#dbe0e6] bg-white p-2.5 text-sm text-[#111418] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-white" placeholder="Ej: 50212345678" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ventas / POS -->
+            <div class="overflow-hidden rounded-xl border border-[#dbe0e6] bg-white shadow-sm dark:border-gray-800 dark:bg-[#1a2632]">
+                <div class="border-b border-[#dbe0e6] bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-800/50">
+                    <h3 class="text-base font-bold text-[#111418] dark:text-white flex items-center gap-2">
+                        <span class="material-symbols-outlined">point_of_sale</span> Ventas y POS
+                    </h3>
+                </div>
+                <div class="p-6 grid gap-6">
+                     <div class="grid md:grid-cols-2 gap-6">
+                        <div class="flex items-center justify-between">
+                             <div>
+                                <label class="font-medium text-[#111418] dark:text-white">Cliente obligatorio</label>
+                            </div>
+                            <label class="relative inline-flex cursor-pointer items-center">
+                                <input type="checkbox" asp-for="Customer_RequiredInPOS" class="peer sr-only">
+                                <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:bg-gray-700 dark:border-gray-600"></div>
+                            </label>
+                        </div>
+                         <div class="flex items-center justify-between">
+                             <div>
+                                <label class="font-medium text-[#111418] dark:text-white">Creación rápida cliente</label>
+                            </div>
+                            <label class="relative inline-flex cursor-pointer items-center">
+                                <input type="checkbox" asp-for="Customer_AllowQuickCreate" class="peer sr-only">
+                                <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:bg-gray-700 dark:border-gray-600"></div>
+                            </label>
+                        </div>
+                         <div class="flex items-center justify-between">
+                             <div>
+                                <label class="font-medium text-[#111418] dark:text-white">Auto-Guardar Carrito</label>
+                            </div>
+                            <label class="relative inline-flex cursor-pointer items-center">
+                                <input type="checkbox" asp-for="POSCart_AutoSave" class="peer sr-only">
+                                <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:bg-gray-700 dark:border-gray-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label asp-for="Customer_DefaultId" class="mb-2 block text-sm font-bold text-[#111418] dark:text-white">ID Cliente por Defecto</label>
+                            <input asp-for="Customer_DefaultId" type="number" class="w-full rounded-lg border border-[#dbe0e6] bg-white p-2.5 text-sm text-[#111418] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+                        </div>
+                        <div>
+                            <label asp-for="POSCart_ExpirationMinutes" class="mb-2 block text-sm font-bold text-[#111418] dark:text-white">Expiración Carrito (Min)</label>
+                            <input asp-for="POSCart_ExpirationMinutes" type="number" class="w-full rounded-lg border border-[#dbe0e6] bg-white p-2.5 text-sm text-[#111418] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Caja & Devoluciones -->
+             <div class="grid md:grid-cols-2 gap-6">
+                 <!-- Caja Registradora -->
+                <div class="overflow-hidden rounded-xl border border-[#dbe0e6] bg-white shadow-sm dark:border-gray-800 dark:bg-[#1a2632]">
+                    <div class="border-b border-[#dbe0e6] bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-800/50">
+                        <h3 class="text-base font-bold text-[#111418] dark:text-white flex items-center gap-2">
+                             <span class="material-symbols-outlined">payments</span> Caja
+                        </h3>
+                    </div>
+                    <div class="p-6 grid gap-6">
+                        <div class="flex items-center justify-between">
+                             <div><label class="font-medium text-[#111418] dark:text-white">Exigir Apertura</label></div>
+                            <label class="relative inline-flex cursor-pointer items-center">
+                                <input type="checkbox" asp-for="CashRegister_RequireOpen" class="peer sr-only">
+                                <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:bg-gray-700 dark:border-gray-600"></div>
+                            </label>
+                        </div>
+                        <div class="flex items-center justify-between">
+                             <div><label class="font-medium text-[#111418] dark:text-white">Múltiples Sesiones</label></div>
+                            <label class="relative inline-flex cursor-pointer items-center">
+                                <input type="checkbox" asp-for="CashRegister_AllowMultipleSessions" class="peer sr-only">
+                                <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:bg-gray-700 dark:border-gray-600"></div>
+                            </label>
+                        </div>
+                         <div>
+                            <label asp-for="CashRegister_DefaultPaymentMethod" class="mb-2 block text-sm font-bold text-[#111418] dark:text-white">Pago por Defecto</label>
+                            <select asp-for="CashRegister_DefaultPaymentMethod" class="w-full rounded-lg border border-[#dbe0e6] bg-white p-2.5 text-sm text-[#111418] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+                                <option value="Cash">Efectivo</option>
+                                <option value="Card">Tarjeta</option>
+                                <option value="Transfer">Transferencia</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Devoluciones -->
+                <div class="overflow-hidden rounded-xl border border-[#dbe0e6] bg-white shadow-sm dark:border-gray-800 dark:bg-[#1a2632]">
+                    <div class="border-b border-[#dbe0e6] bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-800/50">
+                        <h3 class="text-base font-bold text-[#111418] dark:text-white flex items-center gap-2">
+                             <span class="material-symbols-outlined">restart_alt</span> Devoluciones
+                        </h3>
+                    </div>
+                    <div class="p-6 grid gap-6">
+                        <div>
+                            <label asp-for="Refund_MaxHoursAfterSale" class="mb-2 block text-sm font-bold text-[#111418] dark:text-white">Tiempo Límite (Horas)</label>
+                            <input asp-for="Refund_MaxHoursAfterSale" type="number" min="1" max="720" class="w-full rounded-lg border border-[#dbe0e6] bg-white p-2.5 text-sm text-[#111418] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                             <div class="flex items-center gap-2">
+                                <input type="checkbox" asp-for="Refund_AllowPartialRefunds" class="rounded border-gray-300 text-primary focus:ring-primary">
+                                <label asp-for="Refund_AllowPartialRefunds" class="text-sm">Parciales</label>
+                            </div>
+                             <div class="flex items-center gap-2">
+                                <input type="checkbox" asp-for="Refund_RequireReason" class="rounded border-gray-300 text-primary focus:ring-primary">
+                                <label asp-for="Refund_RequireReason" class="text-sm">Motivo Oblig.</label>
+                            </div>
+                             <div class="flex items-center gap-2">
+                                <input type="checkbox" asp-for="Refund_RegisterAsExpenseIfCashClosed" class="rounded border-gray-300 text-primary focus:ring-primary">
+                                <label asp-for="Refund_RegisterAsExpenseIfCashClosed" class="text-sm">Egreso si Cerrado</label>
+                            </div>
+                             <div class="flex items-center gap-2">
+                                <input type="checkbox" asp-for="Refund_RequireAdminRole" class="rounded border-gray-300 text-primary focus:ring-primary">
+                                <label asp-for="Refund_RequireAdminRole" class="text-sm">Solo Admin</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventario & Permisos -->
+             <div class="grid md:grid-cols-2 gap-6 mb-6">
+                 <!-- Inventario -->
+                <div class="overflow-hidden rounded-xl border border-[#dbe0e6] bg-white shadow-sm dark:border-gray-800 dark:bg-[#1a2632]">
+                    <div class="border-b border-[#dbe0e6] bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-800/50">
+                        <h3 class="text-base font-bold text-[#111418] dark:text-white flex items-center gap-2">
+                             <span class="material-symbols-outlined">inventory_2</span> Inventario
+                        </h3>
+                    </div>
+                    <div class="p-6 grid gap-6">
+                        <div>
+                             <label asp-for="Products_PageSize" class="mb-2 block text-sm font-bold text-[#111418] dark:text-white">Items por Página</label>
+                            <input asp-for="Products_PageSize" type="number" class="w-full rounded-lg border border-[#dbe0e6] bg-white p-2.5 text-sm text-[#111418] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+                        </div>
+                        <div class="flex items-center justify-between">
+                             <div><label class="font-medium text-[#111418] dark:text-white">Conteo Ciego</label></div>
+                            <label class="relative inline-flex cursor-pointer items-center">
+                                <input type="checkbox" asp-for="Inventory_BlindCount" class="peer sr-only">
+                                <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:bg-gray-700 dark:border-gray-600"></div>
+                            </label>
+                        </div>
+                        <div class="flex items-center justify-between">
+                             <div><label class="font-medium text-[#111418] dark:text-white">Permitir Gestionar Ciclos</label></div>
+                            <label class="relative inline-flex cursor-pointer items-center">
+                                <input type="checkbox" asp-for="Permissions_CanManageInventory" class="peer sr-only">
+                                <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:bg-gray-700 dark:border-gray-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Permisos Globales de Vendedor -->
+                <div class="overflow-hidden rounded-xl border border-[#dbe0e6] bg-white shadow-sm dark:border-gray-800 dark:bg-[#1a2632]">
+                    <div class="border-b border-[#dbe0e6] bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-800/50">
+                        <h3 class="text-base font-bold text-[#111418] dark:text-white flex items-center gap-2">
+                             <span class="material-symbols-outlined">badge</span> Vendedores
+                        </h3>
+                    </div>
+                    <div class="p-6 grid gap-6">
+                        <div>
+                             <label asp-for="Vendedor_DefaultPage" class="mb-2 block text-sm font-bold text-[#111418] dark:text-white">Página de Inicio</label>
+                             <select asp-for="Vendedor_DefaultPage" class="w-full rounded-lg border border-[#dbe0e6] bg-white p-2.5 text-sm text-[#111418] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+                                <option value="home/index">Dashboard</option>
+                                <option value="ventas/pos">Punto de Venta</option>
+                                <option value="products/index">Inventario</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" asp-for="Vendedor_CanEditStock" class="rounded border-gray-300 text-primary focus:ring-primary">
+                                <label asp-for="Vendedor_CanEditStock" class="text-sm">Editar Stock</label>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" asp-for="Vendedor_SeeCostPrice" class="rounded border-gray-300 text-primary focus:ring-primary">
+                                <label asp-for="Vendedor_SeeCostPrice" class="text-sm">Ver Costos</label>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" asp-for="Vendedor_SeeInventoryTotal" class="rounded border-gray-300 text-primary focus:ring-primary">
+                                <label asp-for="Vendedor_SeeInventoryTotal" class="text-sm">Ver Total Inv.</label>
+                            </div>
+                             <div class="flex items-center gap-2">
+                                <input type="checkbox" asp-for="Vendedor_SeeDashboardCharts" class="rounded border-gray-300 text-primary focus:ring-primary">
+                                <label asp-for="Vendedor_SeeDashboardCharts" class="text-sm">Gráficos Dashboard</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </div>
+</div>

@@ -1,0 +1,139 @@
+@model IEnumerable<ControlLibrería.Models.Entities.Expense>
+@{
+    ViewData["Title"] = "Registro de Egresos";
+}
+
+<header class="w-full bg-white/80 dark:bg-[#1a2632]/90 backdrop-blur-md sticky top-0 z-10 border-b border-[#dbe0e6] dark:border-gray-800 px-6 py-4">
+    <div class="flex flex-wrap justify-between items-center gap-4 max-w-[1400px] mx-auto">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-[#111418] dark:text-white text-2xl font-bold leading-tight text-red-600">Gestión de Egresos</h2>
+            <p class="text-[#617589] dark:text-gray-400 text-sm font-normal">Control de gastos operativos y salidas de dinero</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a asp-controller="ExpenseCategories" asp-action="Index" class="flex items-center justify-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
+                <span class="material-symbols-outlined text-[20px]">category</span>
+                Configurar Categorías
+            </a>
+            <a asp-action="Create" class="flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-red-500/20 transition-colors hover:bg-red-700">
+                <span class="material-symbols-outlined text-[20px]">add</span>
+                Nuevo Egreso
+            </a>
+        </div>
+    </div>
+</header>
+
+<div class="p-6">
+    <div class="mx-auto flex max-w-[1400px] flex-col gap-6">
+        
+        <!-- Stats Summary -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white dark:bg-[#1a2632] p-6 rounded-2xl border border-[#dbe0e6] dark:border-gray-800 shadow-sm">
+                <div class="flex items-center gap-4">
+                    <div class="size-12 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-xl flex items-center justify-center">
+                        <span class="material-symbols-outlined">payments</span>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Gastado</p>
+                        <h4 class="text-2xl font-black text-[#111418] dark:text-white">@ViewBag.TotalAmount.ToString("C")</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white dark:bg-[#1a2632] p-6 rounded-2xl border border-[#dbe0e6] dark:border-gray-800 shadow-sm">
+            <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-2 uppercase">Desde</label>
+                    <input type="date" name="startDate" value="@ViewBag.StartDate" class="w-full h-10 rounded-lg bg-gray-50 dark:bg-gray-800 border-none px-4 text-sm" />
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-2 uppercase">Hasta</label>
+                    <input type="date" name="endDate" value="@ViewBag.EndDate" class="w-full h-10 rounded-lg bg-gray-50 dark:bg-gray-800 border-none px-4 text-sm" />
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-2 uppercase">Categoría</label>
+                    <select name="categoryId" asp-items="ViewBag.Categories" class="w-full h-10 rounded-lg bg-gray-50 dark:bg-gray-800 border-none px-4 text-sm">
+                        <option value="">Todas las categorías</option>
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="flex-1 bg-primary text-white font-bold h-10 rounded-lg hover:bg-blue-600 transition-all flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-[20px]">filter_alt</span>
+                        Filtrar
+                    </button>
+                    <a asp-action="Index" class="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-800 transition-all">
+                        <span class="material-symbols-outlined text-[20px]">restart_alt</span>
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="overflow-hidden rounded-xl border border-[#dbe0e6] bg-white shadow-sm dark:border-gray-800 dark:bg-[#1a2632]">
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[800px] text-left">
+                    <thead class="border-b border-[#dbe0e6] bg-gray-50 dark:border-gray-800 dark:bg-gray-800/50">
+                        <tr>
+                            <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Fecha</th>
+                            <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Categoría</th>
+                            <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Descripción / Referencia</th>
+                            <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400 text-right">Monto</th>
+                            <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#f0f2f4] dark:divide-gray-800">
+                        @foreach (var item in Model)
+                        {
+                            <tr class="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-bold text-[#111418] dark:text-white">@item.Date.ToString("dd/MM/yyyy")</span>
+                                        <span class="text-[10px] text-gray-400">@item.Date.ToString("HH:mm")</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-1 rounded-lg bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 text-xs font-bold">
+                                        @(item.Category?.Name ?? "General")
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm text-[#111418] dark:text-white font-medium">@item.Description</span>
+                                        @if (!string.IsNullOrEmpty(item.Reference))
+                                        {
+                                            <span class="text-xs text-gray-500 italic">Ref: @item.Reference</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <span class="text-sm font-black text-red-600 dark:text-red-400">@item.Amount.ToString("C")</span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <div class="flex items-center justify-end gap-2 sm:opacity-0 transition-opacity group-hover:opacity-100">
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="flex h-9 w-9 items-center justify-center rounded-lg border border-[#dbe0e6] bg-white text-[#617589] hover:border-primary hover:text-primary dark:border-gray-800 dark:bg-surface-dark transition-all" title="Editar">
+                                            <span class="material-symbols-outlined text-[18px]">edit</span>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@item.Id" class="flex h-9 w-9 items-center justify-center rounded-lg border border-[#dbe0e6] bg-white text-red-400 hover:border-red-500 hover:text-red-500 dark:border-gray-800 dark:bg-surface-dark transition-all" title="Eliminar">
+                                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            
+            @if (!Model.Any())
+            {
+                <div class="p-20 text-center">
+                    <div class="size-16 bg-gray-50 dark:bg-gray-800 text-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-symbols-outlined text-[40px]">search_off</span>
+                    </div>
+                    <h3 class="text-gray-500 font-bold">No se encontraron egresos</h3>
+                    <p class="text-gray-400 text-sm">Prueba ajustando los filtros de fecha o categoría</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

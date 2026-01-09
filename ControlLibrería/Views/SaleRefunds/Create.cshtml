@@ -1,0 +1,376 @@
+@model ControlLibrería.Models.ViewModels.RefundViewModel
+
+@{
+    ViewData["Title"] = "Procesar Devolución";
+}
+
+<!-- Header -->
+<header class="w-full bg-white/80 dark:bg-[#1a2632]/90 backdrop-blur-md sticky top-0 z-10 border-b border-[#dbe0e6] dark:border-gray-800 px-6 py-4">
+    <div class="flex flex-wrap justify-between items-center gap-4 max-w-[1400px] mx-auto">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-[#111418] dark:text-white text-2xl font-bold leading-tight">Procesar Devolución</h2>
+            <p class="text-[#617589] dark:text-gray-400 text-sm font-normal">Venta #@Model.SaleId</p>
+        </div>
+        <a asp-controller="Sales" asp-action="Details" asp-route-id="@Model.SaleId" class="flex items-center gap-2 rounded-lg border border-[#dbe0e6] bg-white px-4 py-2 text-sm font-medium text-[#111418] hover:bg-gray-50 dark:border-gray-800 dark:bg-[#1a2632] dark:text-white dark:hover:bg-gray-800 transition-colors">
+            <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+            Volver a la Venta
+        </a>
+    </div>
+</header>
+
+<div class="p-6">
+    <div class="flex flex-col gap-6 max-w-[1400px] mx-auto pb-10">
+        @if (TempData["Error"] != null)
+        {
+            <div class="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-start gap-3">
+                <span class="material-symbols-outlined text-red-600 dark:text-red-400 text-[20px]">error</span>
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-red-900 dark:text-red-400">@TempData["Error"]</p>
+                </div>
+            </div>
+        }
+
+        <form action="/devoluciones/crear" method="post" id="refundForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="SaleId" />
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- Información de la Venta -->
+                <div class="lg:col-span-1">
+                    <div class="rounded-xl border-l-4 border-l-yellow-500 bg-white dark:bg-[#1a2632] border border-[#dbe0e6] dark:border-gray-800 shadow-sm p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="flex-1">
+                                <p class="text-xs font-bold text-yellow-600 dark:text-yellow-500 uppercase tracking-wider mb-3">
+                                    Información de Venta #@Model.SaleId
+                                </p>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-[#617589] dark:text-gray-400">Fecha:</span>
+                                        <span class="font-semibold text-[#111418] dark:text-white">@Model.Sale?.Date.ToString("dd/MM/yyyy HH:mm")</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-[#617589] dark:text-gray-400">Cliente:</span>
+                                        <span class="font-semibold text-[#111418] dark:text-white truncate ml-2">@(Model.Sale?.Customer?.Name ?? "Cliente General")</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-[#617589] dark:text-gray-400">Vendedor:</span>
+                                        <span class="font-semibold text-[#111418] dark:text-white">@(Model.Sale?.UserId ?? "Sistema")</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-[#617589] dark:text-gray-400">Método de Pago:</span>
+                                        @switch(Model.Sale?.PaymentMethod)
+                                        {
+                                            case ControlLibrería.Models.Entities.PaymentMethod.Cash: 
+                                                <span class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-1 text-xs font-medium">Efectivo</span>
+                                                break;
+                                            case ControlLibrería.Models.Entities.PaymentMethod.Card: 
+                                                <span class="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 text-xs font-medium">Tarjeta</span>
+                                                break;
+                                            case ControlLibrería.Models.Entities.PaymentMethod.Transfer: 
+                                                <span class="inline-flex items-center rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 px-2 py-1 text-xs font-medium">Transferencia</span>
+                                                break;
+                                            default: 
+                                                <span class="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400 px-2 py-1 text-xs font-medium">Mixto</span>
+                                                break;
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="material-symbols-outlined text-[#dbe0e6] dark:text-gray-700 text-[48px]">receipt</span>
+                        </div>
+                        <div class="pt-4 border-t border-[#dbe0e6] dark:border-gray-700">
+                            <p class="text-2xl font-black text-[#111418] dark:text-white">Q @(Model.Sale?.Total.ToString("N2"))</p>
+                            <p class="text-xs text-[#617589] dark:text-gray-400 font-medium">Total de la Venta</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detalles de la Devolución -->
+                <div class="lg:col-span-2">
+                    <div class="rounded-xl border border-[#dbe0e6] dark:border-gray-800 bg-white dark:bg-[#1a2632] shadow-sm">
+                        <div class="p-6 border-b border-[#dbe0e6] dark:border-gray-700">
+                            <h3 class="text-lg font-bold text-[#111418] dark:text-white">Detalles de la Devolución</h3>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div>
+                                <label asp-for="Reason" class="block text-xs font-bold text-[#617589] dark:text-gray-400 uppercase tracking-wider mb-2">
+                                    Motivo de la Devolución <span class="text-red-500">*</span>
+                                </label>
+                                <select asp-for="Reason" class="w-full h-11 rounded-xl border border-[#dbe0e6] dark:border-gray-700 bg-white dark:bg-gray-800 px-4 text-sm text-[#111418] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all mb-2" id="reasonSelect">
+                                    <option value="">Seleccione un motivo...</option>
+                                    <option value="Producto defectuoso">Producto defectuoso</option>
+                                    <option value="Cliente insatisfecho">Cliente insatisfecho</option>
+                                    <option value="Error en la venta">Error en la venta</option>
+                                    <option value="Cambio de producto">Cambio de producto</option>
+                                    <option value="Otro">Otro</option>
+                                </select>
+                                <input type="text" class="hidden w-full h-11 rounded-xl border border-[#dbe0e6] dark:border-gray-700 bg-white dark:bg-gray-800 px-4 text-sm text-[#111418] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" id="customReason" placeholder="Especifique el motivo..." />
+                                <span asp-validation-for="Reason" class="text-red-500 text-xs"></span>
+                            </div>
+                            
+                            <div>
+                                <label asp-for="Notes" class="block text-xs font-bold text-[#617589] dark:text-gray-400 uppercase tracking-wider mb-2">Notas Adicionales</label>
+                                <textarea asp-for="Notes" class="w-full rounded-xl border border-[#dbe0e6] dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-[#111418] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none" rows="2"></textarea>
+                            </div>
+                            
+                            <div class="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
+                                <input class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary focus:ring-2" type="checkbox" asp-for="IsFullRefund" id="isFullRefund">
+                                <label class="text-sm font-semibold text-[#111418] dark:text-white cursor-pointer" for="isFullRefund">
+                                    Devolución Total (Todos los productos)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Productos -->
+            <div class="rounded-xl border border-[#dbe0e6] dark:border-gray-800 bg-white dark:bg-[#1a2632] shadow-sm mb-6">
+                <div class="p-6 border-b border-[#dbe0e6] dark:border-gray-700">
+                    <h3 class="text-lg font-bold text-[#111418] dark:text-white">Selección de Productos</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-gray-50 dark:bg-gray-800/50">
+                            <tr class="text-xs font-bold text-[#617589] dark:text-gray-400 uppercase tracking-wider">
+                                <th class="p-4">Producto</th>
+                                <th class="p-4 text-center">Vendido</th>
+                                <th class="p-4 text-center">Devuelto</th>
+                                <th class="p-4 text-center">Disponible</th>
+                                <th class="p-4 text-center">A Devolver</th>
+                                <th class="p-4 text-right">Precio Unit.</th>
+                                <th class="p-4 text-right">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-[#f0f2f4] dark:divide-gray-800">
+                            @for (int i = 0; i < Model.RefundItems.Count; i++)
+                            {
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/20 transition-colors @(Model.RefundItems[i].QuantityAvailable == 0 ? "opacity-50" : "")">
+                                    <td class="p-4">
+                                        <input type="hidden" asp-for="RefundItems[i].SaleDetailId" />
+                                        <input type="hidden" asp-for="RefundItems[i].ProductId" />
+                                        <input type="hidden" asp-for="RefundItems[i].ProductName" />
+                                        <input type="hidden" asp-for="RefundItems[i].UnitPrice" />
+                                        <input type="hidden" asp-for="RefundItems[i].QuantitySold" />
+                                        <input type="hidden" asp-for="RefundItems[i].QuantityAlreadyReturned" />
+                                        
+                                        <span class="text-sm font-semibold text-[#111418] dark:text-white">@Model.RefundItems[i].ProductName</span>
+                                    </td>
+                                    <td class="p-4 text-center text-sm text-[#617589] dark:text-gray-400">@Model.RefundItems[i].QuantitySold</td>
+                                    <td class="p-4 text-center text-sm text-[#617589] dark:text-gray-400">@Model.RefundItems[i].QuantityAlreadyReturned</td>
+                                    <td class="p-4 text-center">
+                                        <span class="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 text-xs font-bold quantity-available">@Model.RefundItems[i].QuantityAvailable</span>
+                                    </td>
+                                    <td class="p-4">
+                                        <input type="number" asp-for="RefundItems[i].Quantity" 
+                                               class="w-20 h-9 text-center rounded-lg border border-[#dbe0e6] dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-bold text-[#111418] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary mx-auto block refund-qty" 
+                                               min="0" max="@Model.RefundItems[i].QuantityAvailable"
+                                               data-price="@Model.RefundItems[i].UnitPrice"
+                                               onchange="calculateTotal()" 
+                                               disabled="@(Model.RefundItems[i].QuantityAvailable == 0 ? "disabled" : null)" />
+                                    </td>
+                                    <td class="p-4 text-right text-sm font-medium text-[#617589] dark:text-gray-400">Q @Model.RefundItems[i].UnitPrice.ToString("N2")</td>
+                                    <td class="p-4 text-right text-sm font-black text-primary">
+                                        Q <span class="row-subtotal">0.00</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="bg-gray-50 dark:bg-gray-800/50">
+                            <tr>
+                                <td colspan="6" class="p-4 text-right text-base font-bold text-[#111418] dark:text-white">Total a Devolver:</td>
+                                <td class="p-4 text-right">
+                                    <p class="text-2xl font-black text-green-600 dark:text-green-400">Q <span id="grandTotal">0.00</span></p>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="flex flex-col sm:flex-row gap-3 justify-end">
+                <a asp-controller="Sales" asp-action="Details" asp-route-id="@Model.SaleId" class="flex items-center justify-center gap-2 rounded-lg border border-[#dbe0e6] bg-white px-6 py-3 text-sm font-medium text-[#111418] hover:bg-gray-50 dark:border-gray-800 dark:bg-[#1a2632] dark:text-white dark:hover:bg-gray-800 transition-colors">
+                    Cancelar
+                </a>
+                <button type="button" class="flex items-center justify-center gap-2 rounded-lg bg-red-600 px-6 py-3 text-sm font-bold text-white hover:bg-red-700 transition-colors shadow-lg shadow-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed" onclick="openConfirmModal()">
+                    <span class="material-symbols-outlined text-[20px]">undo</span>
+                    Procesar Devolución
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de Confirmación (fuera del formulario) -->
+<div id="confirmModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#1a2632] rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+        <div class="p-6 bg-red-600 text-white flex justify-between items-center">
+            <h3 class="text-lg font-bold">Confirmar Devolución</h3>
+            <button type="button" onclick="closeConfirmModal()" class="text-white hover:text-gray-200 transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="p-6 space-y-4">
+            <p class="text-sm text-[#111418] dark:text-white">
+                ¿Está seguro que desea procesar esta devolución por un total de <strong class="text-red-600 dark:text-red-400 text-lg">Q <span id="modalTotal">0.00</span></strong>?
+            </p>
+            
+            <div class="p-4 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
+                <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-yellow-600 dark:text-yellow-400 text-[20px]">warning</span>
+                    <div class="text-xs text-yellow-900 dark:text-yellow-400">
+                        <p class="font-bold mb-2">Esta acción:</p>
+                        <ul class="list-disc pl-4 space-y-1">
+                            <li>Devolverá los productos al inventario.</li>
+                            <li>Registrará la salida de dinero de la caja.</li>
+                            <li>No se puede deshacer.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="p-6 bg-gray-50 dark:bg-gray-800/50 flex gap-3 justify-end">
+            <button type="button" onclick="closeConfirmModal()" class="px-4 py-2 rounded-lg border border-[#dbe0e6] dark:border-gray-700 bg-white dark:bg-gray-800 text-[#111418] dark:text-white font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                Cancelar
+            </button>
+            <button type="button" onclick="submitRefundForm()" class="px-4 py-2 rounded-lg bg-red-600 text-white font-bold hover:bg-red-700 transition-colors shadow-lg shadow-red-500/30">
+                Confirmar Devolución
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function() {
+            // Manejo del select de motivos
+            $('#reasonSelect').change(function() {
+                if ($(this).val() === 'Otro') {
+                    $('#customReason').removeClass('hidden').prop('required', true).focus();
+                } else {
+                    $('#customReason').addClass('hidden').prop('required', false);
+                }
+            });
+
+            // Sincronizar 'otro' motivo con el select
+            $('#refundForm').submit(function() {
+                var reasonSelect = $('#reasonSelect').val();
+                if (reasonSelect === 'Otro') {
+                    $('#reasonSelect').val($('#customReason').val());
+                }
+            });
+
+            // Manejo de devolución total
+            $('#isFullRefund').change(function() {
+                if ($(this).is(':checked')) {
+                    $('.refund-qty').each(function() {
+                        if (!$(this).prop('disabled')) {
+                            var max = $(this).attr('max');
+                            $(this).val(max);
+                        }
+                    });
+                    $('.refund-qty').prop('readonly', true);
+                } else {
+                    $('.refund-qty').val(0);
+                    $('.refund-qty').prop('readonly', false);
+                }
+                calculateTotal();
+            });
+
+            // Calcular totales iniciales
+            calculateTotal();
+        });
+
+        function calculateTotal() {
+            var grandTotal = 0;
+            
+            $('.refund-qty').each(function() {
+                var qty = parseFloat($(this).val()) || 0;
+                var price = parseFloat($(this).data('price')) || 0;
+                var subtotal = qty * price;
+                
+                $(this).closest('tr').find('.row-subtotal').text(subtotal.toFixed(2));
+                grandTotal += subtotal;
+            });
+
+            $('#grandTotal').text(grandTotal.toFixed(2));
+            $('#modalTotal').text(grandTotal.toFixed(2));
+
+            // Deshabilitar botón si total es 0
+            var submitBtn = document.querySelector('button[onclick="openConfirmModal()"]');
+            if (grandTotal <= 0) {
+                submitBtn.disabled = true;
+            } else {
+                submitBtn.disabled = false;
+            }
+        }
+
+        function openConfirmModal() {
+            // Validar que hay productos seleccionados
+            var grandTotal = parseFloat($('#grandTotal').text());
+            if (grandTotal <= 0) {
+                showToast('Debe seleccionar al menos un producto para devolver', 'error');
+                return;
+            }
+
+            // Validar motivo
+            var reason = $('#reasonSelect').val();
+            if (!reason || reason === '') {
+                showToast('Debe seleccionar un motivo de devolución', 'error');
+                $('#reasonSelect').focus();
+                return;
+            }
+
+            // Si el motivo es "Otro", validar que se haya especificado
+            if (reason === 'Otro') {
+                var customReason = $('#customReason').val().trim();
+                if (!customReason) {
+                    showToast('Debe especificar el motivo de la devolución', 'error');
+                    $('#customReason').focus();
+                    return;
+                }
+            }
+
+            document.getElementById('confirmModal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
+        }
+
+        function submitRefundForm() {
+            console.log('submitRefundForm called');
+            
+            // Cerrar modal
+            closeConfirmModal();
+            
+            console.log('Submitting form...');
+            
+            // Enviar formulario
+            var form = document.getElementById('refundForm');
+            if (form) {
+                console.log('Form found, submitting...');
+                form.submit();
+            } else {
+                console.error('Form not found!');
+                showToast('Error: No se encontró el formulario', 'error');
+            }
+        }
+
+        // Close modal on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeConfirmModal();
+            }
+        });
+
+        // Close modal on backdrop click
+        document.getElementById('confirmModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeConfirmModal();
+            }
+        });
+    </script>
+}

@@ -1,0 +1,136 @@
+@model ControlLibrería.Models.ViewModels.ProductIndexViewModel
+@inject ControlLibrería.Services.IConfigurationService Config
+@{
+    ViewData["Title"] = "Inventario";
+    var symbol = await Config.GetCurrencySymbolAsync();
+}
+
+<!-- Page Heading & Actions -->
+<header class="w-full bg-white/80 dark:bg-[#1a2632]/90 backdrop-blur-md sticky top-0 z-10 border-b border-[#dbe0e6] dark:border-gray-800 px-6 py-4">
+    <div class="flex flex-wrap justify-between items-center gap-4 max-w-[1400px] mx-auto">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-[#111418] dark:text-white text-2xl font-bold leading-tight">Gestión de Inventario</h2>
+            <p class="text-[#617589] dark:text-gray-400 text-sm font-normal">Catálogo completo, existencias y precios</p>
+        </div>
+        <div class="flex items-center gap-3">
+            @if (ViewBag.CanEditStock == true)
+            {
+                <button class="hidden sm:flex items-center justify-center gap-2 rounded-lg border border-[#dbe0e6] bg-white px-4 py-2 text-sm font-medium text-[#111418] hover:bg-gray-50 dark:border-gray-800 dark:bg-surface-dark dark:text-white dark:hover:bg-gray-800 transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">file_upload</span>
+                    Importar
+                </button>
+                <a asp-action="Create" class="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white shadow-lg shadow-blue-500/20 transition-colors hover:bg-blue-600">
+                    <span class="material-symbols-outlined text-[20px]">add</span>
+                    Nuevo Producto
+                </a>
+            }
+        </div>
+    </div>
+</header>
+
+<div class="p-6">
+    <div class="mx-auto flex max-w-[1400px] flex-col gap-6">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="flex flex-col gap-2 rounded-xl border border-[#dbe0e6] bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-[#1a2632]">
+                <div class="flex items-center justify-between">
+                    <p class="text-sm font-medium text-[#617589] dark:text-gray-400">Total Productos</p>
+                    <span class="material-symbols-outlined text-primary text-[24px]">library_books</span>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <p class="text-2xl font-bold leading-tight text-[#111418] dark:text-white">@Model.TotalProducts</p>
+                    <span class="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">+@Model.TotalProducts%</span>
+                </div>
+            </div>
+            <div class="flex flex-col gap-2 rounded-xl border border-[#dbe0e6] bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-[#1a2632]">
+                <div class="flex items-center justify-between">
+                    <p class="text-sm font-medium text-[#617589] dark:text-gray-400">Valor Inventario</p>
+                    <span class="material-symbols-outlined text-primary text-[24px]">attach_money</span>
+                </div>
+                <div class="flex items-baseline gap-2 @(ViewBag.SeeInventoryTotal == false ? "blur-md select-none" : "")">
+                    <p class="text-2xl font-bold leading-tight text-[#111418] dark:text-white">@(symbol)@Model.InventoryValue.ToString("N2")</p>
+                    <span class="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">Total</span>
+                </div>
+            </div>
+            <div class="flex flex-col gap-2 rounded-xl border border-[#dbe0e6] bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-[#1a2632]">
+                <div class="flex items-center justify-between">
+                    <p class="text-sm font-medium text-[#617589] dark:text-gray-400">Stock Bajo</p>
+                    <span class="material-symbols-outlined text-[#e73908] text-[24px]">warning</span>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <p class="text-2xl font-bold leading-tight text-[#111418] dark:text-white">@Model.LowStockCount items</p>
+                    <span class="text-sm font-medium text-[#617589] dark:text-gray-500">Requieren atención</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters & Search Toolbar -->
+        <form method="get" asp-action="Index" class="flex flex-col gap-4 rounded-xl border border-[#dbe0e6] bg-white p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between dark:border-gray-800 dark:bg-[#1a2632]">
+            <!-- Search -->
+            <div class="relative flex w-full max-w-md items-center">
+                <span class="material-symbols-outlined absolute left-3 text-[#617589] dark:text-gray-400">search</span>
+                <input name="searchTerm" value="@Model.SearchTerm" class="h-11 w-full rounded-lg border border-[#dbe0e6] bg-[#f8f9fa] pl-10 pr-4 text-sm text-[#111418] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-blue-500" placeholder="Buscar por nombre o SKU..." type="text"/>
+            </div>
+            <!-- Filter Chips -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0">
+                <select name="categoryId" onchange="this.form.submit()" class="h-9 shrink-0 items-center gap-2 rounded-lg border-none bg-gray-50 px-4 text-sm font-medium text-[#111418] hover:bg-gray-200 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 outline-none focus:ring-0 cursor-pointer">
+                    <option value="">Todas las categorías</option>
+                    @foreach (var cat in Model.Categories)
+                    {
+                        <option value="@cat.Id" selected="@(Model.SelectedCategory == cat.Id ? "selected" : null)">@cat.Name</option>
+                    }
+                </select>
+                <div class="h-6 w-px bg-[#dbe0e6] dark:bg-gray-800 mx-1"></div>
+                <button type="submit" class="flex h-9 items-center justify-center rounded-lg bg-primary/10 px-4 text-primary text-sm font-bold hover:bg-primary/20 transition-colors">
+                    Filtrar
+                </button>
+            </div>
+        </form>
+
+        <!-- Data Table Container -->
+        <div id="inventoryTableContainer" class="overflow-hidden rounded-xl border border-[#dbe0e6] bg-white shadow-sm dark:border-gray-800 dark:bg-[#1a2632]">
+            <partial name="_ProductTablePartial" model="Model" />
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const searchInput = document.querySelector('input[name="searchTerm"]');
+        const categorySelect = document.querySelector('select[name="categoryId"]');
+        const tableContainer = document.getElementById('inventoryTableContainer');
+        let searchTimeout;
+        let currentPage = 1;
+
+        function updateTable(page = 1) {
+            currentPage = page;
+            const searchTerm = searchInput.value;
+            const categoryId = categorySelect.value;
+            const url = `@Url.Action("Index")?searchTerm=${encodeURIComponent(searchTerm)}&categoryId=${categoryId}&page=${page}`;
+
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                tableContainer.innerHTML = html;
+            });
+        }
+        
+        // Function called by pagination buttons
+        window.changePage = function(page) {
+            if (page < 1) return;
+            updateTable(page);
+        }
+
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => updateTable(1), 300); // Reset to page 1 on search
+        });
+
+        categorySelect.addEventListener('change', () => updateTable(1)); // Reset to page 1 on filter change
+    </script>
+}
+

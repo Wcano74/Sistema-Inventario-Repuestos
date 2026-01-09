@@ -1,0 +1,158 @@
+@model List<ControlLibrería.Models.ViewModels.UserPermissionsViewModel>
+
+@{
+    ViewData["Title"] = "Gestión de Permisos";
+}
+
+<header class="w-full bg-white/80 dark:bg-[#1a2632]/90 backdrop-blur-md sticky top-0 z-10 border-b border-[#dbe0e6] dark:border-gray-800 px-6 py-4">
+    <div class="flex flex-wrap justify-between items-center gap-4 max-w-[1400px] mx-auto">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-[#111418] dark:text-white text-2xl font-bold leading-tight">Usuarios y Permisos</h2>
+            <p class="text-[#617589] dark:text-gray-400 text-sm font-normal">Gestiona el acceso individual a funcionalidades sensibles</p>
+        </div>
+        <div class="flex items-center gap-3">
+             <a asp-action="CreateUser" class="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-green-500/20 transition-colors hover:bg-green-700">
+                <span class="material-symbols-outlined text-[20px]">person_add</span>
+                Crear Usuario
+            </a>
+             <a asp-action="Index" class="flex items-center gap-2 rounded-lg bg-gray-100 dark:bg-gray-700 px-4 py-2 text-sm font-medium text-[#111418] dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                <span class="material-symbols-outlined text-[20px]">settings</span>
+                Configuración General
+            </a>
+        </div>
+    </div>
+</header>
+
+<div class="p-6">
+    <div class="mx-auto flex max-w-[1400px] flex-col gap-6">
+        <div class="overflow-hidden rounded-xl border border-[#dbe0e6] bg-white shadow-sm dark:border-gray-800 dark:bg-[#1a2632]">
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[800px] text-left">
+                    <thead class="border-b border-[#dbe0e6] bg-gray-50 dark:border-gray-800 dark:bg-gray-800/50">
+                        <tr>
+                            <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Usuario</th>
+                            <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Rol</th>
+                            <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Procesar Devoluciones</th>
+                            <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Ver Bitácora</th>
+                            <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Acceso a Compras</th>
+                            <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#f0f2f4] dark:divide-gray-800">
+                        @foreach (var user in Model)
+                        {
+                            <tr class="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                <td class="px-6 py-4">
+                                     <div class="flex items-center gap-3">
+                                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600 font-bold dark:bg-blue-900/30 dark:text-blue-400">
+                                            @user.UserName.Substring(0, 1).ToUpper()
+                                        </div>
+                                        <div>
+                                            <p class="font-medium text-[#111418] dark:text-white">@user.FullName</p>
+                                            <p class="text-xs text-[#617589] dark:text-gray-400">@user.UserName</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    @if(user.Role == "Admin")
+                                    {
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2.5 py-1 text-xs font-bold text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                            Admin
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-1 text-xs font-bold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                                            Vendedor
+                                        </span>
+                                    }
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <div class="flex justify-center">
+                                        <label class="relative inline-flex cursor-pointer items-center">
+                                            <input type="checkbox" class="peer sr-only permission-toggle" 
+                                                   data-userid="@user.UserId" data-perm="CanProcessRefunds"
+                                                   @(user.CanProcessRefunds || user.Role == "Admin" ? "checked" : "")
+                                                   @(user.Role == "Admin" ? "disabled" : "")>
+                                            <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:bg-gray-700 dark:border-gray-600 @(user.Role == "Admin" ? "opacity-50 cursor-not-allowed" : "")"></div>
+                                        </label>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <div class="flex justify-center">
+                                        <label class="relative inline-flex cursor-pointer items-center">
+                                            <input type="checkbox" class="peer sr-only permission-toggle" 
+                                                   data-userid="@user.UserId" data-perm="CanViewAuditLog"
+                                                   @(user.CanViewAuditLog || user.Role == "Admin" ? "checked" : "")
+                                                   @(user.Role == "Admin" ? "disabled" : "")>
+                                            <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:bg-gray-700 dark:border-gray-600 @(user.Role == "Admin" ? "opacity-50 cursor-not-allowed" : "")"></div>
+                                        </label>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <div class="flex justify-center">
+                                        <label class="relative inline-flex cursor-pointer items-center">
+                                            <input type="checkbox" class="peer sr-only permission-toggle" 
+                                                   data-userid="@user.UserId" data-perm="CanAccessPurchases"
+                                                   @(user.CanAccessPurchases || user.Role == "Admin" ? "checked" : "")
+                                                   @(user.Role == "Admin" ? "disabled" : "")>
+                                            <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:bg-gray-700 dark:border-gray-600 @(user.Role == "Admin" ? "opacity-50 cursor-not-allowed" : "")"></div>
+                                        </label>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <form asp-action="DeleteUser" method="post" onsubmit="return confirm('¿Estás seguro de eliminar este usuario?');">
+                                        <input type="hidden" name="userId" value="@user.UserId" />
+                                        <button type="submit" class="text-red-500 hover:text-red-700 transition-colors" @(user.UserName == User.Identity.Name ? "disabled" : "")>
+                                            <span class="material-symbols-outlined">delete</span>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+             <div class="bg-blue-50 dark:bg-blue-900/10 p-4 border-t border-[#dbe0e6] dark:border-gray-800">
+                <p class="text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">info</span>
+                    Nota: Los administradores tienen todos los permisos habilitados por defecto y no se pueden modificar individualmente.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('.permission-toggle').change(function() {
+                var userId = $(this).data('userid');
+                var permission = $(this).data('perm');
+                var isGranted = $(this).is(':checked');
+
+                $.ajax({
+                    url: '/configuracion/usuarios/permisos',
+                    type: 'POST',
+                    data: {
+                        userId: userId,
+                        permission: permission,
+                        isGranted: isGranted
+                    },
+                    headers: {
+                        "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function() {
+                        showToast('Permiso actualizado correctamente');
+                    },
+                    error: function(xhr) {
+                        showToast('Error al actualizar permiso. Intente recargar.', 'error');
+                        console.error(xhr.responseText);
+                        // Revert check
+                        $(this).prop('checked', !isGranted);
+                    }
+                });
+            });
+        });
+    </script>
+}

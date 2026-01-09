@@ -1,0 +1,20 @@
+@{
+    ViewData["Title"] = "Acceso Denegado";
+}
+
+<div class="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+    <div class="size-20 rounded-full bg-red-100 dark:bg-red-900/20 text-red-600 flex items-center justify-center mb-6">
+        <span class="material-symbols-outlined text-[48px]">block</span>
+    </div>
+    <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">Acceso Denegado</h1>
+    <p class="text-slate-600 dark:text-slate-400 max-w-md">No tienes los permisos necesarios para acceder a esta sección. Si crees que esto es un error, contacta al administrador.</p>
+    
+    <div class="mt-8 flex gap-4">
+        <a href="javascript:history.back()" class="px-6 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+            Volver
+        </a>
+        <a asp-controller="Home" asp-action="Index" class="px-6 py-2.5 rounded-xl bg-primary text-white font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-600 transition-all">
+            Ir al Inicio
+        </a>
+    </div>
+</div>
