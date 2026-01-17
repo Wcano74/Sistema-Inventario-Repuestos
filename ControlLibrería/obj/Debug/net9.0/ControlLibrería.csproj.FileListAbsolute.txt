@@ -200,3 +200,4 @@
 /Volumes/Mac NVME/Control Librería/ControlLibrería/ControlLibrería/obj/Debug/net9.0/ControlL.00822280.Up2Date
 /Volumes/Mac NVME/Control Librería/ControlLibrería/ControlLibrería/obj/Debug/net9.0/ControlLibrería.genruntimeconfig.cache
 /Volumes/Mac NVME/Control Librería/ControlLibrería/ControlLibrería/obj/Debug/net9.0/ref/ControlLibrería.dll
+/Volumes/Mac NVME/Control Librería/ControlLibrería/ControlLibrería/obj/Debug/net9.0/ControlLibrería.sourcelink.json
