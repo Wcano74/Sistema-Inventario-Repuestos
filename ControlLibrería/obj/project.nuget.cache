@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "4gPakAryUXA=",
+  "dgSpecHash": "MrxIi0Tz31o=",
   "success": true,
   "projectFilePath": "/Volumes/Mac NVME/Control Librería/ControlLibrería/ControlLibrería/ControlLibrería.csproj",
   "expectedPackageFiles": [
@@ -52,8 +52,6 @@
     "/Users/wcano/.nuget/packages/microsoft.sqlserver.server/1.0.0/microsoft.sqlserver.server.1.0.0.nupkg.sha512",
     "/Users/wcano/.nuget/packages/microsoft.win32.systemevents/6.0.0/microsoft.win32.systemevents.6.0.0.nupkg.sha512",
     "/Users/wcano/.nuget/packages/mono.texttemplating/2.2.1/mono.texttemplating.2.2.1.nupkg.sha512",
-    "/Users/wcano/.nuget/packages/runtime.any.system.runtime/4.3.0/runtime.any.system.runtime.4.3.0.nupkg.sha512",
-    "/Users/wcano/.nuget/packages/runtime.any.system.text.encoding/4.3.0/runtime.any.system.text.encoding.4.3.0.nupkg.sha512",
     "/Users/wcano/.nuget/packages/system.codedom/4.4.0/system.codedom.4.4.0.nupkg.sha512",
     "/Users/wcano/.nuget/packages/system.collections.immutable/6.0.0/system.collections.immutable.6.0.0.nupkg.sha512",
     "/Users/wcano/.nuget/packages/system.composition/6.0.0/system.composition.6.0.0.nupkg.sha512",
@@ -71,7 +69,6 @@
     "/Users/wcano/.nuget/packages/system.memory/4.5.4/system.memory.4.5.4.nupkg.sha512",
     "/Users/wcano/.nuget/packages/system.memory.data/1.0.2/system.memory.data.1.0.2.nupkg.sha512",
     "/Users/wcano/.nuget/packages/system.numerics.vectors/4.5.0/system.numerics.vectors.4.5.0.nupkg.sha512",
-    "/Users/wcano/.nuget/packages/system.private.uri/4.3.0/system.private.uri.4.3.0.nupkg.sha512",
     "/Users/wcano/.nuget/packages/system.reflection.metadata/6.0.1/system.reflection.metadata.6.0.1.nupkg.sha512",
     "/Users/wcano/.nuget/packages/system.runtime/4.3.0/system.runtime.4.3.0.nupkg.sha512",
     "/Users/wcano/.nuget/packages/system.runtime.caching/6.0.0/system.runtime.caching.6.0.0.nupkg.sha512",
@@ -87,8 +84,7 @@
     "/Users/wcano/.nuget/packages/system.text.json/8.0.0/system.text.json.8.0.0.nupkg.sha512",
     "/Users/wcano/.nuget/packages/system.threading.channels/6.0.0/system.threading.channels.6.0.0.nupkg.sha512",
     "/Users/wcano/.nuget/packages/system.threading.tasks.extensions/4.5.4/system.threading.tasks.extensions.4.5.4.nupkg.sha512",
-    "/Users/wcano/.nuget/packages/system.windows.extensions/6.0.0/system.windows.extensions.6.0.0.nupkg.sha512",
-    "/Users/wcano/.nuget/packages/microsoft.netcore.app.host.win-x64/9.0.3/microsoft.netcore.app.host.win-x64.9.0.3.nupkg.sha512"
+    "/Users/wcano/.nuget/packages/system.windows.extensions/6.0.0/system.windows.extensions.6.0.0.nupkg.sha512"
   ],
   "logs": []
 }

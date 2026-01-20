@@ -201,3 +201,9 @@
 /Volumes/Mac NVME/Control Librería/ControlLibrería/ControlLibrería/obj/Debug/net9.0/ControlLibrería.genruntimeconfig.cache
 /Volumes/Mac NVME/Control Librería/ControlLibrería/ControlLibrería/obj/Debug/net9.0/ref/ControlLibrería.dll
 /Volumes/Mac NVME/Control Librería/ControlLibrería/ControlLibrería/obj/Debug/net9.0/ControlLibrería.sourcelink.json
+/Volumes/Mac NVME/Control Librería/ControlLibrería/ControlLibrería/bin/Debug/net9.0/publish/web.config
+/Volumes/Mac NVME/Control Librería/ControlLibrería/ControlLibrería/bin/Debug/net9.0/publish/appsettings.Development.json
+/Volumes/Mac NVME/Control Librería/ControlLibrería/ControlLibrería/bin/Debug/net9.0/publish/appsettings.json
+/Volumes/Mac NVME/Control Librería/ControlLibrería/ControlLibrería/bin/Debug/net9.0/publish/ControlLibrería.deps.json
+/Volumes/Mac NVME/Control Librería/ControlLibrería/ControlLibrería/bin/Debug/net9.0/publish/ControlLibrería.runtimeconfig.json
+/Volumes/Mac NVME/Control Librería/ControlLibrería/ControlLibrería/bin/Debug/net9.0/publish/ControlLibrería.staticwebassets.endpoints.json
