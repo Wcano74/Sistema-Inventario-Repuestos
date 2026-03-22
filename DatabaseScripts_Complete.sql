@@ -1,4 +1,5 @@
-﻿IF OBJECT_ID(N'[__EFMigrationsHistory]') IS NULL
+﻿
+IF OBJECT_ID(N'[__EFMigrationsHistory]') IS NULL
 BEGIN
     CREATE TABLE [__EFMigrationsHistory] (
         [MigrationId] nvarchar(150) NOT NULL,
@@ -199,11 +200,7 @@ INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
 VALUES (N'20251227055937_InitialCreate', N'8.0.0');
 GO
 
-COMMIT;
-GO
 
-BEGIN TRANSACTION;
-GO
 
                 CREATE PROCEDURE sp_GetDailySales
                 AS
@@ -214,7 +211,7 @@ GO
                     FROM Sales
                     WHERE CAST(Date AS DATE) = CAST(GETDATE() AS DATE);
                 END
-GO
+
 
                 CREATE PROCEDURE sp_GetLowStockProducts
                 AS
@@ -223,7 +220,7 @@ GO
                     FROM Products
                     WHERE StockQuantity <= MinStock;
                 END
-GO
+
 
                 CREATE PROCEDURE sp_GetTopSellingProducts
                 AS
@@ -237,7 +234,7 @@ GO
                     GROUP BY p.Name
                     ORDER BY TotalSold DESC;
                 END
-GO
+
 
 INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
 VALUES (N'20251227062103_AddReportProcedures', N'8.0.0');

@@ -133,6 +133,10 @@
                                 <span class="material-symbols-outlined text-[24px]">admin_panel_settings</span>
                                 <span class="text-sm font-medium">Usuarios</span>
                             </a>
+                            <a asp-controller="Settings" asp-action="Backups" class="flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewContext.RouteData.Values["action"]?.ToString() == "Backups" ? "bg-primary/10 text-primary dark:text-blue-400" : "text-[#617589] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800") transition-colors group">
+                                <span class="material-symbols-outlined text-[24px]">backup</span>
+                                <span class="text-sm font-medium">Respaldos</span>
+                            </a>
                         }
                         
                          <!-- Inventory Cycles -->

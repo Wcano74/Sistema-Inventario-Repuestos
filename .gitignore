@@ -61,3 +61,7 @@ CORRECCIONES_OPCIONALES.md
 
 ## Distribution folder (compiled binaries)
 Distribucion_Cliente/
+
+## Database backups (contain sensitive data, do not upload)
+backups/*.bak
+backups/*.log

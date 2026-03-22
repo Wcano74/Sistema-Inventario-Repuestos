@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 using SistemaInventario.Data;
 using SistemaInventario.Models.ViewModels;
 using SistemaInventario.Models.Entities;
@@ -16,12 +17,14 @@ namespace SistemaInventario.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IConfigurationService _configService;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IHostApplicationLifetime _appLifetime;
 
-        public SettingsController(ApplicationDbContext context, IConfigurationService configService, UserManager<ApplicationUser> userManager)
+        public SettingsController(ApplicationDbContext context, IConfigurationService configService, UserManager<ApplicationUser> userManager, IHostApplicationLifetime appLifetime)
         {
             _context = context;
             _configService = configService;
             _userManager = userManager;
+            _appLifetime = appLifetime;
         }
 
         // GET: /configuracion/sistema
@@ -272,6 +275,250 @@ namespace SistemaInventario.Controllers
 
             await _context.SaveChangesAsync();
             return Ok();
+        }
+
+        // ==========================================
+        // BACKUP & RESTORE
+        // ==========================================
+
+        private const string SqlBackupDir = "/var/opt/mssql/backups"; // Ruta dentro del contenedor SQL Server
+        private const string LocalBackupDir = "/app/backups";       // Ruta dentro del contenedor webapp
+        private const string DbName = "SistemaInventarioDB";
+
+        private string GetMasterConnectionString()
+        {
+            var cs = _context.Database.GetConnectionString() ?? "";
+            return cs.Replace(DbName, "master");
+        }
+
+        private static string FormatFileSize(long bytes)
+        {
+            if (bytes >= 1_073_741_824) return $"{bytes / 1_073_741_824.0:F1} GB";
+            if (bytes >= 1_048_576) return $"{bytes / 1_048_576.0:F1} MB";
+            if (bytes >= 1024) return $"{bytes / 1024.0:F1} KB";
+            return $"{bytes} B";
+        }
+
+        private bool IsValidBackupFileName(string fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName)) return false;
+            if (fileName.Contains("..") || fileName.Contains('/') || fileName.Contains('\\')) return false;
+            if (!fileName.EndsWith(".bak", StringComparison.OrdinalIgnoreCase)) return false;
+            return true;
+        }
+
+        // GET: /configuracion/respaldos
+        [Route("respaldos")]
+        public IActionResult Backups()
+        {
+            var backups = new List<BackupFileViewModel>();
+
+            try
+            {
+                if (Directory.Exists(LocalBackupDir))
+                {
+                    var files = new DirectoryInfo(LocalBackupDir)
+                        .GetFiles("*.bak")
+                        .OrderByDescending(f => f.CreationTime);
+
+                    foreach (var file in files)
+                    {
+                        backups.Add(new BackupFileViewModel
+                        {
+                            FileName = file.Name,
+                            SizeInBytes = file.Length,
+                            SizeFormatted = FormatFileSize(file.Length),
+                            CreatedAt = file.CreationTime
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al leer backups: {ex.Message}";
+            }
+
+            return View(backups);
+        }
+
+        // POST: /configuracion/respaldos/crear
+        [HttpPost]
+        [Route("respaldos/crear")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateBackup()
+        {
+            try
+            {
+                Directory.CreateDirectory(LocalBackupDir);
+                var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                var fileName = $"{DbName}_{timestamp}.bak";
+                var backupPath = Path.Combine(SqlBackupDir, fileName);
+
+                using var connection = new SqlConnection(GetMasterConnectionString());
+                await connection.OpenAsync();
+                var sql = $"BACKUP DATABASE [{DbName}] TO DISK = @path WITH FORMAT, INIT, NAME = @name";
+                using var command = new SqlCommand(sql, connection);
+                command.Parameters.AddWithValue("@path", backupPath);
+                command.Parameters.AddWithValue("@name", $"{DbName}-Backup-{timestamp}");
+                command.CommandTimeout = 120;
+                await command.ExecuteNonQueryAsync();
+
+                TempData["Success"] = $"Respaldo '{fileName}' creado exitosamente.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al crear respaldo: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Backups));
+        }
+
+        // POST: /configuracion/respaldos/restaurar
+        [HttpPost]
+        [Route("respaldos/restaurar")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RestoreBackup(string fileName)
+        {
+            if (!IsValidBackupFileName(fileName))
+            {
+                TempData["Error"] = "Nombre de archivo no válido.";
+                return RedirectToAction(nameof(Backups));
+            }
+
+            var localPath = Path.Combine(LocalBackupDir, fileName);
+            if (!System.IO.File.Exists(localPath))
+            {
+                TempData["Error"] = "El archivo de respaldo no existe.";
+                return RedirectToAction(nameof(Backups));
+            }
+
+            var sqlPath = Path.Combine(SqlBackupDir, fileName);
+
+            try
+            {
+                using var connection = new SqlConnection(GetMasterConnectionString());
+                await connection.OpenAsync();
+
+                // Set single user to force disconnect all users
+                var singleUserCmd = new SqlCommand(
+                    $"IF DB_ID('{DbName}') IS NOT NULL ALTER DATABASE [{DbName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE",
+                    connection);
+                singleUserCmd.CommandTimeout = 30;
+                await singleUserCmd.ExecuteNonQueryAsync();
+
+                // Restore the database
+                var restoreCmd = new SqlCommand(
+                    $"RESTORE DATABASE [{DbName}] FROM DISK = @path WITH REPLACE, RECOVERY",
+                    connection);
+                restoreCmd.Parameters.AddWithValue("@path", sqlPath);
+                restoreCmd.CommandTimeout = 120;
+                await restoreCmd.ExecuteNonQueryAsync();
+
+                // Set multi user
+                var multiUserCmd = new SqlCommand(
+                    $"ALTER DATABASE [{DbName}] SET MULTI_USER",
+                    connection);
+                multiUserCmd.CommandTimeout = 30;
+                await multiUserCmd.ExecuteNonQueryAsync();
+
+                TempData["Success"] = $"Base de datos restaurada desde '{fileName}'. Por favor inicie sesión nuevamente.";
+                return RedirectToAction("Login", "Account");
+            }
+            catch (Exception ex)
+            {
+                // Try to set multi user in case of error
+                try
+                {
+                    using var recovery = new SqlConnection(GetMasterConnectionString());
+                    await recovery.OpenAsync();
+                    var cmd = new SqlCommand($"ALTER DATABASE [{DbName}] SET MULTI_USER", recovery);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+                catch { }
+
+                TempData["Error"] = $"Error al restaurar: {ex.Message}";
+                return RedirectToAction(nameof(Backups));
+            }
+        }
+
+        // POST: /configuracion/respaldos/eliminar
+        [HttpPost]
+        [Route("respaldos/eliminar")]
+        [ValidateAntiForgeryToken]
+        public IActionResult DeleteBackup(string fileName)
+        {
+            if (!IsValidBackupFileName(fileName))
+            {
+                TempData["Error"] = "Nombre de archivo no válido.";
+                return RedirectToAction(nameof(Backups));
+            }
+
+            var filePath = Path.Combine(LocalBackupDir, fileName);
+            if (!System.IO.File.Exists(filePath))
+            {
+                TempData["Error"] = "El archivo no existe.";
+                return RedirectToAction(nameof(Backups));
+            }
+
+            try
+            {
+                System.IO.File.Delete(filePath);
+                TempData["Success"] = $"Respaldo '{fileName}' eliminado.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al eliminar: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Backups));
+        }
+
+        // POST: /configuracion/respaldos/resetear
+        [HttpPost]
+        [Route("respaldos/resetear")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetDatabase(string confirmText)
+        {
+            if (confirmText != "RESETEAR")
+            {
+                TempData["Error"] = "Texto de confirmación incorrecto.";
+                return RedirectToAction(nameof(Backups));
+            }
+
+            try
+            {
+                using var connection = new SqlConnection(GetMasterConnectionString());
+                await connection.OpenAsync();
+
+                // Drop the database
+                var dropCmd = new SqlCommand(
+                    $"ALTER DATABASE [{DbName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [{DbName}]",
+                    connection);
+                dropCmd.CommandTimeout = 60;
+                await dropCmd.ExecuteNonQueryAsync();
+
+                // Stop the app so Docker restarts it and recreates the DB via migrations + DbInitializer
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(2000);
+                    _appLifetime.StopApplication();
+                });
+
+                return Content(
+                    "<html><body style='font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;background:#f6f7f8'>" +
+                    "<div style='text-align:center'>" +
+                    "<h2>Base de datos reseteada</h2>" +
+                    "<p>El sistema se esta reiniciando automaticamente...</p>" +
+                    "<p style='color:#617589;margin-top:16px'>La pagina se recargara en unos segundos.</p>" +
+                    "<script>setTimeout(()=>window.location.href='/',15000)</script>" +
+                    "</div></body></html>",
+                    "text/html");
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al resetear: {ex.Message}";
+                return RedirectToAction(nameof(Backups));
+            }
         }
     }
 }
