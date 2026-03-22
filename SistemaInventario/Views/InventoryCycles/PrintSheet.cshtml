@@ -1,0 +1,171 @@
+@model SistemaInventario.Models.Entities.InventoryCycle
+@{
+    Layout = null; // No layout for printable page
+    var groupedCounts = Model.Counts
+        .GroupBy(c => c.Product.Category?.Name ?? "Sin Categoría")
+        .OrderBy(g => g.Key);
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hoja de Conteo - Inventario #@Model.Id</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            color: #000;
+            background: #fff;
+            margin: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 20px;
+            text-transform: uppercase;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .info-item {
+            font-weight: bold;
+        }
+        .info-item span {
+            font-weight: normal;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .category-row {
+            background-color: #eee;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .count-column {
+            width: 100px;
+            text-align: center;
+        }
+        .notes-column {
+            width: 200px;
+        }
+        .footer {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-around;
+        }
+        .signature {
+            border-top: 1px solid #000;
+            width: 200px;
+            text-align: center;
+            padding-top: 5px;
+        }
+        
+        @("@")media print {
+            .no-print {
+                display: none;
+            }
+            body {
+                margin: 0;
+            }
+            table {
+                page-break-inside: auto;
+            }
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+            thead {
+                display: table-header-group;
+            }
+        }
+        
+        .print-btn {
+            background-color: #000;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            display: block;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <button onclick="window.print()" class="no-print print-btn">Imprimir Hoja de Conteo</button>
+
+    <div class="header">
+        <h1>Hoja de Conteo de Inventario</h1>
+        <p>Sistema de Inventario - Gestión de Existencias</p>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-item">ID Inventario: <span>#@Model.Id</span></div>
+        <div class="info-item">Fecha Apertura: <span>@Model.OpenedAt.ToString("dd/MM/yyyy HH:mm")</span></div>
+        <div class="info-item">Responsable: <span>@(Model.User?.DisplayName ?? "Sistema")</span></div>
+        <div class="info-item">Alcance: <span>@(Model.Scope == "Category" ? $"Categoría: {Model.Category?.Name}" : "Total")</span></div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Código / SKU</th>
+                <th>Descripción del Producto</th>
+                <th class="count-column">Conteo Físico</th>
+                <th class="notes-column">Observaciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var group in groupedCounts)
+            {
+                <tr class="category-row">
+                    <td colspan="4">Categoría: @group.Key</td>
+                </tr>
+                @foreach (var count in group.OrderBy(c => c.Product.Name))
+                {
+                    <tr>
+                        <td>@(count.Product.Barcode ?? "N/A")</td>
+                        <td>@count.Product.Name</td>
+                        <td class="count-column"></td>
+                        <td class="notes-column"></td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <div class="signature">Firma Responsable</div>
+        <div class="signature">Firma Supervisor</div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            // Optional: Auto-trigger print if needed, but manual button is safer
+        };
+    </script>
+</body>
+</html>

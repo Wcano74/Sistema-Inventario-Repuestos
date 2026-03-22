@@ -1,0 +1,55 @@
+# ==============================================================
+# Docker Compose - Sistema de Inventario
+# Levanta SQL Server + Aplicación Web
+# ==============================================================
+# Uso:
+#   docker compose up --build        (primera vez o después de cambios)
+#   docker compose up -d             (en segundo plano)
+#   docker compose down              (detener)
+#   docker compose down -v           (detener y eliminar volúmenes/datos)
+# ==============================================================
+
+services:
+  # --- Base de Datos: SQL Server 2022 ---
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: inventario-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=SistemaInventario77!
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "SistemaInventario77!" -Q "SELECT 1" -C -b
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  # --- Aplicación Web: Sistema de Inventario ---
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: inventario-webapp
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=SistemaInventarioDB;User Id=sa;Password=SistemaInventario77!;TrustServerCertificate=True;MultipleActiveResultSets=true;Encrypt=False
+    ports:
+      - "8080:8080"
+    volumes:
+      - product-images:/app/wwwroot/images/products
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  sqlserver-data:
+    name: inventario-sqlserver-data
+  product-images:
+    name: inventario-product-images

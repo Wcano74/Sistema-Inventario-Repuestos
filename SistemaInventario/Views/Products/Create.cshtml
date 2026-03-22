@@ -1,0 +1,298 @@
+@model SistemaInventario.Models.Entities.Product
+@inject SistemaInventario.Services.IConfigurationService Config
+@{
+    ViewData["Title"] = "Nuevo Producto";
+    var symbol = await Config.GetCurrencySymbolAsync();
+}
+
+<!-- Page Heading -->
+<header class="w-full bg-white/80 dark:bg-[#1a2632]/90 backdrop-blur-md sticky top-0 z-10 border-b border-[#dbe0e6] dark:border-gray-800 px-6 py-4">
+    <div class="flex flex-wrap justify-between items-center gap-4 max-w-[1000px] mx-auto">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-[#111418] dark:text-white text-2xl font-bold leading-tight">Nuevo Producto</h2>
+            <p class="text-[#617589] dark:text-gray-400 text-sm font-normal">Añade un nuevo ítem al catálogo de inventario</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a asp-action="Index" class="flex items-center justify-center gap-2 rounded-lg border border-[#dbe0e6] bg-white px-4 py-2 text-sm font-medium text-[#111418] hover:bg-gray-50 dark:border-gray-800 dark:bg-surface-dark dark:text-white dark:hover:bg-gray-800 transition-colors">
+                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                Cancelar
+            </a>
+        </div>
+    </div>
+</header>
+
+<div class="p-6">
+    <div class="mx-auto max-w-[800px]">
+        <form asp-action="Create" enctype="multipart/form-data" class="flex flex-col gap-6">
+            <div asp-validation-summary="ModelOnly" class="rounded-xl bg-red-50 p-4 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400"></div>
+            
+            <!-- General Information Card -->
+            <div class="bg-white dark:bg-[#1a2632] rounded-3xl border border-[#dbe0e6] dark:border-gray-800 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-[#f0f2f4] dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 flex items-center gap-3">
+                    <span class="material-symbols-outlined text-primary">info</span>
+                    <h3 class="text-sm font-bold text-[#111418] dark:text-white uppercase tracking-wider">Información General</h3>
+                </div>
+                <div class="p-8 flex flex-col gap-6">
+                    <div class="flex flex-col gap-2">
+                        <label asp-for="Name" class="text-sm font-semibold text-[#111418] dark:text-white">Nombre del Producto</label>
+                        <input asp-for="Name" class="h-11 rounded-lg border border-[#dbe0e6] bg-white px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white" placeholder="Ej: Libro El Principito" />
+                        <span asp-validation-for="Name" class="text-xs text-red-500"></span>
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        <label asp-for="Description" class="text-sm font-semibold text-[#111418] dark:text-white">Descripción</label>
+                        <textarea asp-for="Description" rows="3" class="rounded-lg border border-[#dbe0e6] bg-white p-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white" placeholder="Breve descripción del producto..."></textarea>
+                        <span asp-validation-for="Description" class="text-xs text-red-500"></span>
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        <label asp-for="Barcode" class="text-sm font-semibold text-[#111418] dark:text-white">Código de Barras / SKU</label>
+                        <input asp-for="Barcode" class="h-11 rounded-lg border border-[#dbe0e6] bg-white px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white font-mono" placeholder="Ej: BK-123456" />
+                        <span asp-validation-for="Barcode" class="text-xs text-red-500"></span>
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        <label asp-for="Brand" class="text-sm font-semibold text-[#111418] dark:text-white">Marca / Fabricante</label>
+                        <input asp-for="Brand" class="h-11 rounded-lg border border-[#dbe0e6] bg-white px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white" placeholder="Ej: Editorial Planeta" />
+                        <span asp-validation-for="Brand" class="text-xs text-red-500"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing & Stock Card -->
+            <div class="bg-white dark:bg-[#1a2632] rounded-3xl border border-[#dbe0e6] dark:border-gray-800 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-[#f0f2f4] dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 flex items-center gap-3">
+                    <span class="material-symbols-outlined text-primary">sell</span>
+                    <h3 class="text-sm font-bold text-[#111418] dark:text-white uppercase tracking-wider">Precios e Inventario</h3>
+                </div>
+                <div class="p-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div class="flex flex-col gap-2">
+                        <label asp-for="Price" class="text-sm font-semibold text-[#111418] dark:text-white">Precio de Venta</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">@symbol</span>
+                            <input asp-for="Price" class="h-11 w-full rounded-lg border border-[#dbe0e6] bg-white pl-8 pr-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white" type="number" step="0.01" />
+                        </div>
+                        <span asp-validation-for="Price" class="text-xs text-red-500"></span>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label asp-for="Cost" class="text-sm font-semibold text-[#111418] dark:text-white">Costo de Compra</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">@symbol</span>
+                            <input asp-for="Cost" class="h-11 w-full rounded-lg border border-[#dbe0e6] bg-white pl-8 pr-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white" type="number" step="0.01" />
+                        </div>
+                        <span asp-validation-for="Cost" class="text-xs text-red-500"></span>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label asp-for="StockQuantity" class="text-sm font-semibold text-[#111418] dark:text-white">Stock Inicial</label>
+                        <input asp-for="StockQuantity" class="h-11 rounded-lg border border-[#dbe0e6] bg-white px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white" type="number" />
+                        <span asp-validation-for="StockQuantity" class="text-xs text-red-500"></span>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label asp-for="MinStock" class="text-sm font-semibold text-[#111418] dark:text-white">Stock Mínimo (Alerta)</label>
+                        <input asp-for="MinStock" class="h-11 rounded-lg border border-[#dbe0e6] bg-white px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white" type="number" />
+                        <span asp-validation-for="MinStock" class="text-xs text-red-500"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- categorization Card -->
+            <div class="bg-white dark:bg-[#1a2632] rounded-3xl border border-[#dbe0e6] dark:border-gray-800 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-[#f0f2f4] dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 flex items-center gap-3">
+                    <span class="material-symbols-outlined text-primary">category</span>
+                    <h3 class="text-sm font-bold text-[#111418] dark:text-white uppercase tracking-wider">Clasificación</h3>
+                </div>
+                <div class="p-8 flex flex-col gap-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div class="flex flex-col gap-2">
+                            <label asp-for="CategoryId" class="text-sm font-semibold text-[#111418] dark:text-white">Categoría</label>
+                            <select asp-for="CategoryId" class="h-11 rounded-lg border border-[#dbe0e6] bg-white px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white" asp-items="ViewBag.CategoryId"></select>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label asp-for="SupplierId" class="text-sm font-semibold text-[#111418] dark:text-white">Proveedor</label>
+                            <select asp-for="SupplierId" class="h-11 rounded-lg border border-[#dbe0e6] bg-white px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white" asp-items="ViewBag.SupplierId">
+                                <option value="">-- Seleccionar Proveedor --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Image Upload Section -->
+                    <div class="flex flex-col gap-3">
+                        <label class="text-sm font-semibold text-[#111418] dark:text-white">Imagen del Producto</label>
+                        <input type="hidden" asp-for="ImageUrl" id="ImageUrl" />
+                        <span asp-validation-for="ImageUrl" class="text-xs text-red-500"></span>
+
+                        <!-- Tabs -->
+                        <div class="flex border-b border-[#dbe0e6] dark:border-gray-700">
+                            <button type="button" id="tabUpload" onclick="switchTab('upload')" class="px-4 py-2 text-sm font-medium border-b-2 border-primary text-primary transition-colors">
+                                <span class="material-symbols-outlined text-[16px] align-middle mr-1">upload_file</span>Subir Archivo
+                            </button>
+                            <button type="button" id="tabUrl" onclick="switchTab('url')" class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
+                                <span class="material-symbols-outlined text-[16px] align-middle mr-1">link</span>URL Externa
+                            </button>
+                        </div>
+
+                        <!-- Tab: Upload -->
+                        <div id="panelUpload">
+                            <div id="dropZone" class="relative border-2 border-dashed border-[#dbe0e6] dark:border-gray-700 rounded-xl p-8 text-center cursor-pointer hover:border-primary hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-all">
+                                <input type="file" name="imageFile" id="imageFile" accept="image/jpeg,image/png,image/webp,image/gif" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                                <div id="uploadPlaceholder" class="flex flex-col items-center gap-2">
+                                    <span class="material-symbols-outlined text-4xl text-gray-400">cloud_upload</span>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Arrastra una imagen aquí o <span class="text-primary font-semibold">haz clic para seleccionar</span></p>
+                                    <p class="text-xs text-gray-400">JPG, PNG, WebP, GIF - Máx. 5MB</p>
+                                </div>
+                                <div id="uploadPreview" class="hidden">
+                                    <img id="previewImg" class="max-h-48 mx-auto rounded-lg object-contain" />
+                                    <p id="previewName" class="mt-2 text-sm text-gray-600 dark:text-gray-300"></p>
+                                </div>
+                            </div>
+                            <button type="button" id="btnRemoveFile" class="hidden mt-2 text-xs text-red-500 hover:text-red-700 font-medium" onclick="removeFile()">
+                                <span class="material-symbols-outlined text-[14px] align-middle">delete</span> Quitar imagen
+                            </button>
+                        </div>
+
+                        <!-- Tab: URL -->
+                        <div id="panelUrl" class="hidden">
+                            <input type="text" id="imageUrlInput" class="h-11 w-full rounded-lg border border-[#dbe0e6] bg-white px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white" placeholder="https://ejemplo.com/imagen.jpg" />
+                            <div id="urlPreview" class="hidden mt-3 flex justify-center">
+                                <img id="urlPreviewImg" class="max-h-48 rounded-lg object-contain border border-[#dbe0e6] dark:border-gray-700" />
+                            </div>
+                            <p id="urlError" class="hidden mt-1 text-xs text-red-500">No se pudo cargar la imagen desde esta URL</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 py-4">
+                <a asp-action="Index" class="h-12 px-6 flex items-center justify-center rounded-xl border border-[#dbe0e6] text-[#111418] dark:border-gray-800 dark:text-white hover:bg-gray-50 transition-colors font-bold">Cancelar</a>
+                <button type="submit" class="h-12 px-10 flex items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-blue-500/30 hover:bg-blue-600 transition-all font-bold">
+                    Guardar Producto
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        let activeTab = 'upload';
+
+        function switchTab(tab) {
+            activeTab = tab;
+            const tabUpload = document.getElementById('tabUpload');
+            const tabUrl = document.getElementById('tabUrl');
+            const panelUpload = document.getElementById('panelUpload');
+            const panelUrl = document.getElementById('panelUrl');
+
+            if (tab === 'upload') {
+                tabUpload.classList.add('border-primary', 'text-primary');
+                tabUpload.classList.remove('border-transparent', 'text-gray-500');
+                tabUrl.classList.remove('border-primary', 'text-primary');
+                tabUrl.classList.add('border-transparent', 'text-gray-500');
+                panelUpload.classList.remove('hidden');
+                panelUrl.classList.add('hidden');
+                // Clear URL input when switching to upload
+                document.getElementById('imageUrlInput').value = '';
+                document.getElementById('ImageUrl').value = '';
+                document.getElementById('urlPreview').classList.add('hidden');
+            } else {
+                tabUrl.classList.add('border-primary', 'text-primary');
+                tabUrl.classList.remove('border-transparent', 'text-gray-500');
+                tabUpload.classList.remove('border-primary', 'text-primary');
+                tabUpload.classList.add('border-transparent', 'text-gray-500');
+                panelUrl.classList.remove('hidden');
+                panelUpload.classList.add('hidden');
+                // Clear file input when switching to URL
+                removeFile();
+            }
+        }
+
+        // File upload preview
+        const fileInput = document.getElementById('imageFile');
+        const dropZone = document.getElementById('dropZone');
+
+        fileInput.addEventListener('change', function () {
+            handleFile(this.files[0]);
+        });
+
+        dropZone.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            this.classList.add('border-primary', 'bg-blue-50/50');
+        });
+
+        dropZone.addEventListener('dragleave', function (e) {
+            e.preventDefault();
+            this.classList.remove('border-primary', 'bg-blue-50/50');
+        });
+
+        dropZone.addEventListener('drop', function (e) {
+            e.preventDefault();
+            this.classList.remove('border-primary', 'bg-blue-50/50');
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file) return;
+            const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+            if (!validTypes.includes(file.type)) {
+                alert('Tipo de archivo no permitido. Solo se aceptan: JPG, PNG, WebP, GIF');
+                fileInput.value = '';
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                alert('El archivo es demasiado grande. El tamaño máximo es 5MB.');
+                fileInput.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('previewName').textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+                document.getElementById('uploadPlaceholder').classList.add('hidden');
+                document.getElementById('uploadPreview').classList.remove('hidden');
+                document.getElementById('btnRemoveFile').classList.remove('hidden');
+                // Clear the hidden ImageUrl since file upload takes priority
+                document.getElementById('ImageUrl').value = '';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeFile() {
+            fileInput.value = '';
+            document.getElementById('uploadPlaceholder').classList.remove('hidden');
+            document.getElementById('uploadPreview').classList.add('hidden');
+            document.getElementById('btnRemoveFile').classList.add('hidden');
+        }
+
+        // URL preview
+        const urlInput = document.getElementById('imageUrlInput');
+        let urlTimeout;
+        urlInput.addEventListener('input', function () {
+            clearTimeout(urlTimeout);
+            const url = this.value.trim();
+            document.getElementById('ImageUrl').value = url;
+            document.getElementById('urlError').classList.add('hidden');
+
+            if (!url) {
+                document.getElementById('urlPreview').classList.add('hidden');
+                return;
+            }
+
+            urlTimeout = setTimeout(function () {
+                const img = document.getElementById('urlPreviewImg');
+                img.onload = function () {
+                    document.getElementById('urlPreview').classList.remove('hidden');
+                    document.getElementById('urlError').classList.add('hidden');
+                };
+                img.onerror = function () {
+                    document.getElementById('urlPreview').classList.add('hidden');
+                    document.getElementById('urlError').classList.remove('hidden');
+                };
+                img.src = url;
+            }, 500);
+        });
+    </script>
+}

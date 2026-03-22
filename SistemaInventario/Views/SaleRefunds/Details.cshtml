@@ -1,0 +1,166 @@
+@model SistemaInventario.Models.Entities.SaleRefund
+
+@{
+    ViewData["Title"] = "Detalles de Devolución";
+}
+
+<header class="w-full bg-white/80 dark:bg-[#1a2632]/90 backdrop-blur-md sticky top-0 z-10 border-b border-[#dbe0e6] dark:border-gray-800 px-6 py-4 no-print">
+    <div class="flex flex-wrap justify-between items-center gap-4 max-w-[1400px] mx-auto">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-[#111418] dark:text-white text-2xl font-bold leading-tight">Devolución #@Model.Id</h2>
+            <p class="text-[#617589] dark:text-gray-400 text-sm font-normal">Detalle completo de la nota de crédito</p>
+        </div>
+        <div class="flex items-center gap-3 font-medium">
+             <a asp-action="Index" class="flex items-center gap-2 rounded-lg bg-gray-100 dark:bg-gray-700 px-4 py-2 text-sm text-[#111418] dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                Cerrar
+            </a>
+            <button onclick="window.print()" class="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm text-white shadow-lg shadow-blue-500/20 transition-colors hover:bg-blue-600">
+                <span class="material-symbols-outlined text-[20px]">print</span>
+                Imprimir
+            </button>
+        </div>
+    </div>
+</header>
+
+<div class="p-6">
+    <div class="mx-auto flex max-w-[1200px] flex-col gap-6">
+        
+        @if (TempData["Success"] != null)
+        {
+            <div class="flex items-center gap-3 rounded-lg bg-green-50 p-4 text-green-700 dark:bg-green-900/20 dark:text-green-400 border border-green-100 dark:border-green-900/30">
+                <span class="material-symbols-outlined">check_circle</span>
+                <p class="text-sm">@TempData["Success"]</p>
+            </div>
+        }
+
+        <div class="grid lg:grid-cols-3 gap-6">
+            <!-- Sidebar Info -->
+            <div class="flex flex-col gap-6">
+                <div class="overflow-hidden rounded-xl border border-[#dbe0e6] bg-white shadow-sm dark:border-gray-800 dark:bg-[#1a2632]">
+                    <div class="border-b border-[#dbe0e6] bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-800/50 flex items-center justify-between">
+                        <h3 class="text-sm font-bold text-[#111418] dark:text-white uppercase tracking-wider">Resumen</h3>
+                        @if(Model.RefundType == SistemaInventario.Models.Entities.RefundType.Total)
+                        {
+                            <span class="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-[10px] font-bold text-red-700 dark:bg-red-900/30 dark:text-red-400">TOTAL</span>
+                        }
+                        else
+                        {
+                            <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">PARCIAL</span>
+                        }
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-[#617589] dark:text-gray-400">Fecha:</span>
+                                <span class="font-medium text-[#111418] dark:text-white">@Model.RefundDate.ToString("dd/MM/yyyy HH:mm")</span>
+                            </div>
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-[#617589] dark:text-gray-400">Venta Original:</span>
+                                <a asp-controller="Sales" asp-action="Details" asp-route-id="@Model.SaleId" class="font-bold text-primary hover:underline">#@Model.SaleId</a>
+                            </div>
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-[#617589] dark:text-gray-400">Cliente:</span>
+                                <span class="font-medium text-[#111418] dark:text-white text-right">@(Model.Sale?.Customer?.Name ?? "Cliente General")</span>
+                            </div>
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-[#617589] dark:text-gray-400">Autorizado por:</span>
+                                <span class="font-medium text-[#111418] dark:text-white">@(Model.User?.DisplayName ?? "Sistema")</span>
+                            </div>
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-[#617589] dark:text-gray-400">Caja:</span>
+                                <span class="font-medium text-[#111418] dark:text-white">@(Model.CashRegisterId.HasValue ? $"Caja #{Model.CashRegisterId}" : "N/A")</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 pt-6 border-t border-dashed border-[#dbe0e6] dark:border-gray-700">
+                             <h4 class="text-xs font-bold text-[#617589] dark:text-gray-400 uppercase mb-2">Motivo de Devolución</h4>
+                             <p class="text-sm text-[#111418] dark:text-white leading-relaxed">@Model.Reason</p>
+                             
+                             @if (!string.IsNullOrEmpty(Model.Notes))
+                             {
+                                 <h4 class="text-xs font-bold text-[#617589] dark:text-gray-400 uppercase mt-4 mb-2">Notas</h4>
+                                 <p class="text-sm text-[#617589] dark:text-gray-400 italic">@Model.Notes</p>
+                             }
+                        </div>
+
+                        @if (Model.IsRegisteredAsExpense)
+                        {
+                            <div class="mt-6 flex items-start gap-2 rounded-lg bg-orange-50 p-3 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/20">
+                                <span class="material-symbols-outlined text-orange-600 dark:text-orange-400 text-[18px]">info</span>
+                                <p class="text-[11px] text-orange-700 dark:text-orange-300">Esta devolución fue registrada como un egreso porque la caja original ya estaba cerrada.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items Table -->
+            <div class="lg:col-span-2 flex flex-col gap-6">
+                <div class="overflow-hidden rounded-xl border border-[#dbe0e6] bg-white shadow-sm dark:border-gray-800 dark:bg-[#1a2632]">
+                    <div class="border-b border-[#dbe0e6] bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-800/50">
+                        <h3 class="text-sm font-bold text-[#111418] dark:text-white uppercase tracking-wider">Productos Devueltos</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="border-b border-[#dbe0e6] bg-white dark:border-gray-800 dark:bg-gray-900">
+                                <tr>
+                                    <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-[#617589] dark:text-gray-400">Producto</th>
+                                    <th class="px-6 py-4 text-center text-[11px] font-bold uppercase tracking-wider text-[#617589] dark:text-gray-400">Cantidad</th>
+                                    <th class="px-6 py-4 text-right text-[11px] font-bold uppercase tracking-wider text-[#617589] dark:text-gray-400">Precio Unit.</th>
+                                    <th class="px-6 py-4 text-right text-[11px] font-bold uppercase tracking-wider text-[#617589] dark:text-gray-400">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-[#f0f2f4] dark:divide-gray-800">
+                                @foreach (var item in Model.RefundDetails)
+                                {
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+                                        <td class="px-6 py-4">
+                                            <div class="flex flex-col">
+                                                <span class="text-sm font-medium text-[#111418] dark:text-white">@item.Product?.Name</span>
+                                                <span class="text-[10px] text-[#617589] dark:text-gray-400 uppercase">Cód: @item.Product?.Barcode</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-center">
+                                            <span class="inline-flex h-8 min-w-[32px] items-center justify-center rounded-lg bg-gray-100 px-2 text-sm font-bold text-[#111418] dark:bg-gray-800 dark:text-white">
+                                                @item.QuantityReturned
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-right text-sm text-[#617589] dark:text-gray-400">
+                                            Q @item.UnitPrice.ToString("N2")
+                                        </td>
+                                        <td class="px-6 py-4 text-right font-medium text-[#111418] dark:text-white">
+                                            Q @item.Subtotal.ToString("N2")
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-gray-50 dark:bg-gray-800/50">
+                                    <td colspan="3" class="px-6 py-6 text-right text-base font-bold text-[#111418] dark:text-white uppercase tracking-tight">Monto Total Devuelto:</td>
+                                    <td class="px-6 py-6 text-right text-xl font-black text-red-600 dark:text-red-400 leading-none">
+                                        Q @Model.RefundAmount.ToString("N2")
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @@media print {
+        .no-print { display: none !important; }
+        body { background: white !important; }
+        .p-6 { padding: 0 !important; }
+        .mx-auto { max-width: 100% !important; margin: 0 !important; }
+        .shadow-sm { box-shadow: none !important; }
+        .rounded-xl { border-radius: 0 !important; }
+        .border { border: 1px solid #ddd !important; }
+        header { border-bottom: 2px solid #000 !important; }
+    }
+</style>
+

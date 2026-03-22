@@ -1,0 +1,39 @@
+**/.git
+**/.gitignore
+**/.vs
+**/.vscode
+**/.idea
+**/bin
+**/obj
+**/publish
+**/node_modules
+**/*.db
+**/*.user
+**/*.DotSettings*
+**/build_log.txt
+**/build_output.txt
+
+# Archivos legacy de IIS/Windows
+ControlLibrería/
+ControlLibrería.sln
+ControlLibrería.sln.DotSettings.user
+ControlLibreria_Instalacion.zip
+Distribucion_Cliente/
+instalar_windows.ps1
+preparar_despliegue.sh
+GUIA_DESPLIEGUE_WINDOWS.md
+INSTALACION_BASE_DATOS.md
+DatabaseScripts_Complete.sql
+DatabaseScripts_NoGO.sql
+SeedDummyData.sql
+CORRECCIONES_OPCIONALES.md
+global.json
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentación
+*.md
+!SistemaInventario/**/*.md

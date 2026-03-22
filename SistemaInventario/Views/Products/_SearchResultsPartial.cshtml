@@ -1,0 +1,54 @@
+@model IEnumerable<SistemaInventario.Models.Entities.Product>
+@inject SistemaInventario.Services.IConfigurationService Config
+@{
+    var symbol = await Config.GetCurrencySymbolAsync();
+}
+
+@if (!Model.Any())
+{
+    <div class="p-8 text-center">
+        <span class="material-symbols-outlined text-gray-400 text-[48px] mb-2">search_off</span>
+        <p class="text-[#617589] dark:text-gray-400 text-sm">No se encontraron productos coincidentes.</p>
+    </div>
+}
+else
+{
+    <div class="flex flex-col gap-2 p-2">
+        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 mb-1">Resultados Sugeridos</p>
+        @foreach (var item in Model)
+        {
+            <a asp-controller="Products" asp-action="Details" asp-route-id="@item.Id" class="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
+                <div class="size-12 rounded-lg bg-gray-100 dark:bg-gray-700 overflow-hidden shrink-0 border border-gray-200 dark:border-gray-600">
+                    @if (!string.IsNullOrEmpty(item.ImageUrl))
+                    {
+                        <img src="@item.ImageUrl" class="h-full w-full object-cover" />
+                    }
+                    else
+                    {
+                        <div class="h-full w-full flex items-center justify-center text-gray-400">
+                            <span class="material-symbols-outlined">image</span>
+                        </div>
+                    }
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-start">
+                        <p class="text-sm font-bold text-[#111418] dark:text-white truncate group-hover:text-primary transition-colors">@item.Name</p>
+                        <p class="text-sm font-bold text-primary ml-2">@symbol@item.Price.ToString("N2")</p>
+                    </div>
+                    <div class="flex items-center gap-2 mt-0.5">
+                        <span class="text-[10px] text-[#617589] dark:text-gray-500 font-mono">SKU: @(item.Barcode ?? "---")</span>
+                        <span class="size-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+                        <span class="text-[10px] @(item.StockQuantity <= item.MinStock ? "text-red-500 font-bold" : "text-[#617589] dark:text-gray-400")">Stock: @item.StockQuantity</span>
+                    </div>
+                </div>
+                <span class="material-symbols-outlined text-gray-300 group-hover:text-primary transition-colors">chevron_right</span>
+            </a>
+        }
+    </div>
+    <div class="p-3 bg-gray-50 dark:bg-gray-800/50 border-t border-[#f0f2f4] dark:border-gray-700">
+        <a asp-controller="Products" asp-action="Index" class="text-xs text-primary font-bold flex items-center justify-center gap-2 hover:underline">
+            Ver todo el inventario
+            <span class="material-symbols-outlined text-[16px]">open_in_new</span>
+        </a>
+    </div>
+}

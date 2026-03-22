@@ -1,0 +1,384 @@
+@model SistemaInventario.Models.ViewModels.DashboardViewModel
+@inject SistemaInventario.Services.IConfigurationService Config
+@{
+    ViewData["Title"] = "Reportes Detallados";
+    var symbol = await Config.GetCurrencySymbolAsync();
+    var waEnabled = await Config.GetConfigurationAsync("WhatsAppAlertsEnabled", "false") == "true";
+    var waNumber = await Config.GetConfigurationAsync("WhatsAppNumber", "");
+}
+
+<header class="w-full bg-white/80 dark:bg-[#1a2632]/90 backdrop-blur-md sticky top-0 z-10 border-b border-[#dbe0e6] dark:border-gray-800 px-6 py-4">
+    <div class="flex flex-wrap justify-between items-center gap-4 max-w-[1400px] mx-auto">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-[#111418] dark:text-white text-2xl font-bold leading-tight">Módulo de Reportes</h2>
+            <p class="text-[#617589] dark:text-gray-400 text-sm font-normal">Análisis estadístico y rendimiento del negocio</p>
+        </div>
+        <div class="flex items-center gap-3">
+            @if(false){
+                <button onclick="window.print()" class="flex items-center justify-center gap-2 rounded-lg h-10 px-4 border border-[#dbe0e6] bg-white text-[#111418] text-sm font-medium hover:bg-gray-50 dark:border-gray-800 dark:bg-surface-dark dark:text-white transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">description</span>
+                    Exportar PDF
+                </button>
+            }
+            <div class="relative flex items-center gap-2">
+                <div id="customDateRange" class="hidden flex items-center gap-2 mr-2">
+                    <input type="date" id="customStart" class="h-10 px-3 rounded-lg border border-[#dbe0e6] dark:border-gray-800 bg-white dark:bg-gray-800 text-sm outline-none focus:ring-2 focus:ring-primary/50"/>
+                    <span class="text-gray-400">-</span>
+                    <input type="date" id="customEnd" class="h-10 px-3 rounded-lg border border-[#dbe0e6] dark:border-gray-800 bg-white dark:bg-gray-800 text-sm outline-none focus:ring-2 focus:ring-primary/50"/>
+                    <button id="applyCustom" class="h-10 w-10 flex items-center justify-center bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors">
+                        <span class="material-symbols-outlined">filter_alt</span>
+                    </button>
+                </div>
+                <div class="relative">
+                    <select id="periodFilter" class="flex items-center justify-center gap-2 rounded-lg h-10 px-4 bg-primary text-white text-sm font-medium hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/20 border-none outline-none ring-0 appearance-none cursor-pointer pr-10">
+                        <option value="day">Hoy</option>
+                        <option value="week" selected>Últimos 7 Días</option>
+                        <option value="month">Este Mes</option>
+                        <option value="custom">Personalizado</option>
+                    </select>
+                    <span class="material-symbols-outlined absolute right-3 top-2 text-white pointer-events-none">expand_more</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="p-6">
+    <div class="flex flex-col gap-8 max-w-[1400px] mx-auto pb-10">
+        
+        <!-- Key Metrics Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white dark:bg-[#1a2632] p-5 rounded-2xl border border-[#dbe0e6] dark:border-gray-800 shadow-sm">
+                <p class="text-xs font-bold text-[#617589] dark:text-gray-500 uppercase tracking-widest">Ventas Totales</p>
+                <div class="flex justify-between items-end mt-2">
+                    <h3 id="statTotalSales" class="text-2xl font-bold text-[#111418] dark:text-white">@(symbol)@Model.DailySales.TotalSales.ToString("N2")</h3>
+                    <span class="text-blue-500 text-xs font-bold flex items-center">
+                        <span id="statTrxCount">@Model.DailySales.TransactionCount</span> trx
+                    </span>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-[#1a2632] p-5 rounded-2xl border border-[#dbe0e6] dark:border-gray-800 shadow-sm">
+                <p class="text-xs font-bold text-[#617589] dark:text-gray-500 uppercase tracking-widest">Ganancia Bruta</p>
+                <div class="flex justify-between items-end mt-2">
+                    <h3 id="statGrossProfit" class="text-2xl font-bold text-green-600 dark:text-green-400">@(symbol)@Model.GrossProfit.ToString("N2")</h3>
+                    <span id="statGrossMargen" class="text-gray-400 text-xs font-bold">@(Model.DailySales.TotalSales > 0 ? (Model.GrossProfit / Model.DailySales.TotalSales * 100).ToString("F1") : "0.0")%</span>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-[#1a2632] p-5 rounded-2xl border border-[#dbe0e6] dark:border-gray-800 shadow-sm">
+                <p class="text-xs font-bold text-[#617589] dark:text-gray-500 uppercase tracking-widest">Gastos Operativos</p>
+                <div class="flex justify-between items-end mt-2">
+                    <h3 id="statTotalExpenses" class="text-2xl font-bold text-red-600 dark:text-red-400">@(symbol)@Model.TotalExpenses.ToString("N2")</h3>
+                    <a asp-controller="Expenses" asp-action="Index" class="text-blue-500 text-[10px] font-bold uppercase underline">Ver Detalles</a>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-[#1a2632] p-5 rounded-2xl border border-[#dbe0e6] dark:border-gray-800 shadow-sm ring-2 ring-primary ring-inset">
+                <p class="text-xs font-bold text-primary uppercase tracking-widest">Ganancia Neta</p>
+                <div class="flex justify-between items-end mt-2">
+                    <h3 id="statNetProfit" class="text-2xl font-bold text-[#111418] dark:text-white">@(symbol)@Model.NetProfit.ToString("N2")</h3>
+                    <span class="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">Resultado</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Sales Performance Chart -->
+            <div class="lg:col-span-2 bg-white dark:bg-[#1a2632] rounded-3xl border border-[#dbe0e6] dark:border-gray-800 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-gray-50 dark:border-gray-800 flex justify-between items-center">
+                    <h3 id="weeklyPerformanceTitle" class="font-bold text-[#111418] dark:text-white flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">analytics</span>
+                        Rendimiento Semanal
+                    </h3>
+                </div>
+                <div class="p-8">
+                    <div class="h-[300px] w-full">
+                        <canvas id="weeklyPerformanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Distribution -->
+            <div class="bg-white dark:bg-[#1a2632] rounded-3xl border border-[#dbe0e6] dark:border-gray-800 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-gray-50 dark:border-gray-800">
+                    <h3 class="font-bold text-[#111418] dark:text-white">Composición de Stock</h3>
+                </div>
+                <div class="p-8 flex flex-col items-center">
+                    <div class="relative size-48 mb-8">
+                        <canvas id="categoryPieChart"></canvas>
+                    </div>
+                    <div class="w-full flex flex-col gap-3">
+                        @foreach(var cat in Model.CategoryDistribution.Take(4)) {
+                            <div class="flex items-center justify-between text-sm">
+                                <div class="flex items-center gap-2">
+                                    <div class="size-2 rounded-full" style="background-color: @cat.Color"></div>
+                                    <span class="text-[#617589] dark:text-gray-400">@cat.CategoryName</span>
+                                </div>
+                                <span class="font-bold text-[#111418] dark:text-white">@cat.Percentage.ToString("F1")%</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Top Products Table -->
+            <div class="bg-white dark:bg-[#1a2632] rounded-3xl border border-[#dbe0e6] dark:border-gray-800 shadow-sm overflow-hidden text-sm">
+                <div class="p-6 border-b border-gray-50 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/30">
+                    <h3 class="font-bold text-[#111418] dark:text-white flex items-center gap-2">
+                        <span class="material-symbols-outlined text-yellow-500">trophy</span>
+                        Más Vendidos
+                    </h3>
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">En Período</span>
+                </div>
+                <table class="w-full">
+                    <thead class="text-left bg-gray-50/50 dark:bg-gray-800/50">
+                        <tr>
+                            <th class="px-6 py-3 font-semibold text-gray-500 uppercase tracking-wider text-[10px]">Producto</th>
+                            <th class="px-6 py-3 font-semibold text-gray-500 uppercase tracking-wider text-[10px]">Ventas</th>
+                            <th class="px-6 py-3 font-semibold text-gray-500 uppercase tracking-wider text-[10px] text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topProductsTable" class="divide-y divide-gray-50 dark:divide-gray-800">
+                        @foreach(var p in Model.TopProducts.Take(5)) {
+                            <tr>
+                                <td class="px-6 py-4 font-medium text-[#111418] dark:text-white">@p.Name</td>
+                                <td class="px-6 py-4 text-gray-500">@p.TotalSold uds</td>
+                                <td class="px-6 py-4 text-right font-bold text-primary">@(symbol)@p.Revenue.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Stock Alerts -->
+            @if (waEnabled)
+            {
+                <div class="bg-white dark:bg-[#1a2632] rounded-3xl border border-[#dbe0e6] dark:border-gray-800 shadow-sm overflow-hidden text-sm">
+                <div class="p-6 border-b border-gray-50 dark:border-gray-800 flex justify-between items-center bg-red-50/30 dark:bg-red-900/10">
+                    <h3 class="font-bold text-red-600 dark:text-red-400 flex items-center gap-2">
+                        <span class="material-symbols-outlined">warning</span>
+                        Alertas de Stock
+                    </h3>
+                    <span class="bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full font-bold text-[10px]">@Model.LowStockProducts.Count URGENTES</span>
+                </div>
+                <div class="p-4 max-h-[350px] overflow-y-auto">
+                    @foreach(var p in Model.LowStockProducts.Take(10)) {
+                        <div class="flex items-center justify-between p-3 border-b border-gray-50 dark:border-gray-800 last:border-none">
+                            <div class="flex flex-col">
+                                <span class="font-medium text-[#111418] dark:text-white">@p.Name</span>
+                                <span class="text-[10px] text-gray-400 uppercase tracking-wide">@p.Category?.Name</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="text-right">
+                                    <p class="text-xs font-bold text-red-500">@p.StockQuantity uds</p>
+                                    <p class="text-[10px] text-gray-400">Min: @p.MinStock</p>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    @if (!string.IsNullOrEmpty(waNumber))
+                                    {
+                                        <a href="https://wa.me/@waNumber.Replace(" ", "").Replace("-", "").Replace("+", "")?text=Alerta de Stock Bajo: El producto '@p.Name' tiene solo @p.StockQuantity unidades restantes (Mínimo: @p.MinStock)." target="_blank" class="size-8 rounded-lg bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-green-500 hover:bg-green-100 transition-colors" title="Enviar Alerta WhatsApp">
+                                            <svg class="size-4 fill-current" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.438 9.889-9.886.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.44-9.889 9.888-.001 2.224.58 3.276 1.697 5.17l-.953 3.486 3.745-.96zm13.111-5.111c-.328-.164-1.942-.958-2.241-1.069-.3-.109-.519-.164-.738.164-.219.328-.847 1.069-1.039 1.287-.192.219-.383.246-.711.082s-1.383-.51-2.635-1.627c-.973-.867-1.631-1.939-1.822-2.267-.192-.328-.02-.505.145-.668.148-.146.328-.383.493-.574.164-.192.219-.328.328-.547.11-.219.055-.41-.028-.574-.082-.164-.738-1.777-1.011-2.434-.267-.641-.539-.553-.738-.563-.192-.01-.41-.011-.629-.011s-.574.082-.875.41c-.301.328-1.148 1.121-1.148 2.733s1.175 3.17 1.339 3.389c.164.219 2.313 3.532 5.603 4.956.782.339 1.393.541 1.87.693.785.249 1.5.214 2.066.129.631-.095 1.942-.793 2.216-1.558.274-.765.274-1.422.192-1.558-.083-.136-.301-.218-.629-.382z"/></svg>
+                                        </a>
+                                    }
+                                    <a asp-controller="Products" asp-action="Edit" asp-route-id="@p.Id" class="size-8 rounded-lg bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 hover:text-primary transition-colors">
+                                        <span class="material-symbols-outlined text-[18px]">shopping_cart_checkout</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+            }
+        </div>
+
+        <!-- User Sales Statistics -->
+        <div class="bg-white dark:bg-[#1a2632] rounded-3xl border border-[#dbe0e6] dark:border-gray-800 shadow-sm overflow-hidden text-sm">
+            <div class="p-6 border-b border-gray-50 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/30">
+                <h3 class="font-bold text-[#111418] dark:text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-blue-500">group</span>
+                    Ventas por Usuario
+                </h3>
+            </div>
+            <table class="w-full">
+                <thead class="text-left bg-gray-50/50 dark:bg-gray-800/50">
+                    <tr>
+                        <th class="px-6 py-3 font-semibold text-gray-500 uppercase tracking-wider text-[10px]">Usuario</th>
+                        <th class="px-6 py-3 font-semibold text-gray-500 uppercase tracking-wider text-[10px] text-center">Trx</th>
+                        <th class="px-6 py-3 font-semibold text-gray-500 uppercase tracking-wider text-[10px] text-right">Total Vendido</th>
+                    </tr>
+                </thead>
+                <tbody id="userSalesTable" class="divide-y divide-gray-50 dark:divide-gray-800">
+                    @foreach(var u in Model.UserSales) {
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/20 transition-colors">
+                            <td class="px-6 py-4 font-medium text-[#111418] dark:text-white">@u.UserName</td>
+                            <td class="px-6 py-4 text-center text-gray-500">@u.TransactionCount</td>
+                            <td class="px-6 py-4 text-right font-bold text-primary">@(symbol)@u.TotalSales.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let weeklyChart, categoryChart;
+
+        function formatCurrency(value) {
+            return "@symbol" + Number(value).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function updateReports(period, start = '', end = '') {
+            let url = `/reportes/index?period=${period}`;
+            if (period === 'custom') {
+                url += `&startDate=${start}&endDate=${end}`;
+            }
+
+            fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Update Metric Cards
+                document.getElementById('statTotalSales').innerText = formatCurrency(data.dailySales.totalSales);
+                document.getElementById('statTrxCount').innerText = data.dailySales.transactionCount;
+                
+                document.getElementById('statGrossProfit').innerText = formatCurrency(data.grossProfit);
+                const grossMargen = data.dailySales.totalSales > 0 ? (data.grossProfit / data.dailySales.totalSales * 100).toFixed(1) : "0.0";
+                document.getElementById('statGrossMargen').innerText = grossMargen + "%";
+
+                document.getElementById('statTotalExpenses').innerText = formatCurrency(data.totalExpenses);
+                document.getElementById('statNetProfit').innerText = formatCurrency(data.netProfit);
+
+                // Update Top Products Table
+                const tbody = document.getElementById('topProductsTable');
+                tbody.innerHTML = data.topProducts.map(p => `
+                    <tr>
+                        <td class="px-6 py-4 font-medium text-[#111418] dark:text-white">${p.name}</td>
+                        <td class="px-6 py-4 text-gray-500">${p.totalSold} uds</td>
+                        <td class="px-6 py-4 text-right font-bold text-primary">${formatCurrency(p.revenue)}</td>
+                    </tr>
+                `).join('');
+
+                // Update User Sales Table
+                const userTable = document.getElementById('userSalesTable');
+                userTable.innerHTML = data.userSales.map(u => `
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/20 transition-colors">
+                        <td class="px-6 py-4 font-medium text-[#111418] dark:text-white">${u.userName}</td>
+                        <td class="px-6 py-4 text-center text-gray-500">${u.transactionCount}</td>
+                        <td class="px-6 py-4 text-right font-bold text-primary">${formatCurrency(u.totalSales)}</td>
+                    </tr>
+                `).join('');
+
+                // Update Dynamic Chart
+                weeklyChart.data.labels = data.weeklySales.map(s => s.dayName);
+                weeklyChart.data.datasets[0].data = data.weeklySales.map(s => s.totalSales);
+                weeklyChart.data.datasets[1].data = data.weeklySales.map(s => s.totalProfit);
+                
+                // Change chart label based on period
+                const periodText = document.getElementById('periodFilter').options[document.getElementById('periodFilter').selectedIndex].text;
+                document.querySelector('#weeklyPerformanceTitle').innerText = `Rendimiento - ${periodText}`;
+                
+                weeklyChart.update();
+            })
+            .catch(error => {
+                console.error('Error fetching reports:', error);
+                // Optional: show user-friendly message
+            });
+        }
+
+        const periodFilter = document.getElementById('periodFilter');
+        const customRange = document.getElementById('customDateRange');
+
+        periodFilter.addEventListener('change', (e) => {
+            if (e.target.value === 'custom') {
+                customRange.classList.remove('hidden');
+            } else {
+                customRange.classList.add('hidden');
+                updateReports(e.target.value);
+            }
+        });
+
+        document.getElementById('applyCustom').addEventListener('click', () => {
+            const start = document.getElementById('customStart').value;
+            const end = document.getElementById('customEnd').value;
+            if (start && end) {
+                updateReports('custom', start, end);
+            }
+        });
+
+        // Weekly Performance Chart Initialization
+        const weeklyCtx = document.getElementById('weeklyPerformanceChart').getContext('2d');
+        weeklyChart = new Chart(weeklyCtx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.WeeklySales.Select(s => s.DayName))),
+                datasets: [
+                    {
+                        label: 'Ventas',
+                        data: @Html.Raw(Json.Serialize(Model.WeeklySales.Select(s => s.TotalSales))),
+                        borderColor: '#137fec',
+                        backgroundColor: 'rgba(19, 127, 236, 0.05)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#fff',
+                        pointBorderWidth: 2
+                    },
+                    {
+                        label: 'Ganancia Bruta',
+                        data: @Html.Raw(Json.Serialize(Model.WeeklySales.Select(s => s.TotalProfit))),
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#fff',
+                        pointBorderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { 
+                        display: true,
+                        position: 'top',
+                        labels: { usePointStyle: true, boxWidth: 6, font: { size: 10, weight: 'bold' } }
+                    } 
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true,
+                        grid: { borderDash: [5, 5], color: 'rgba(0,0,0,0.05)' }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // Category Pie Chart Initialization
+        const pieCtx = document.getElementById('categoryPieChart').getContext('2d');
+        categoryChart = new Chart(pieCtx, {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.CategoryDistribution.Select(c => c.CategoryName))),
+                datasets: [{
+                    data: @Html.Raw(Json.Serialize(Model.CategoryDistribution.Select(c => c.Count))),
+                    backgroundColor: @Html.Raw(Json.Serialize(Model.CategoryDistribution.Select(c => c.Color))),
+                    borderWidth: 0,
+                    cutout: '75%'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } }
+            }
+        });
+    </script>
+}

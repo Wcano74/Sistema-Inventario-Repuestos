@@ -1,0 +1,63 @@
+## .NET / ASP.NET Core
+bin/
+obj/
+publish/
+
+## User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## NuGet
+*.nupkg
+*.snupkg
+.nuget/
+**/[Pp]ackages/*
+
+## Visual Studio
+.vs/
+*.sln.ide/
+launchSettings.json
+
+## JetBrains Rider / IntelliJ
+.idea/
+
+## VS Code
+.vscode/
+
+## macOS
+.DS_Store
+**/.DS_Store
+
+## Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+## Product images uploaded by users (stored in Docker volume)
+SistemaInventario/wwwroot/images/products/*
+!SistemaInventario/wwwroot/images/products/.gitkeep
+
+## Old project files (ControlLibrería)
+ControlLibrería/
+ControlLibreria_Instalacion.zip
+CORRECCIONES_OPCIONALES.md
+
+## Distribution folder (compiled binaries)
+Distribucion_Cliente/

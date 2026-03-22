@@ -1,0 +1,160 @@
+@model IEnumerable<SistemaInventario.Models.Entities.ProductHistory>
+
+@{
+    ViewData["Title"] = "Bitácora de Movimientos";
+    int currentPage = ViewBag.CurrentPage;
+    int totalPages = ViewBag.TotalPages;
+    int pageSize = ViewBag.PageSize;
+    int totalItems = ViewBag.TotalItems;
+}
+
+<header class="w-full bg-white/80 dark:bg-[#1a2632]/90 backdrop-blur-md sticky top-0 z-10 border-b border-[#dbe0e6] dark:border-gray-800 px-6 py-4">
+    <div class="flex flex-wrap justify-between items-center gap-4 max-w-[1400px] mx-auto">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-[#111418] dark:text-white text-2xl font-bold leading-tight">Bitácora de Inventario</h2>
+            <p class="text-[#617589] dark:text-gray-400 text-sm font-normal">Historial completo de movimientos</p>
+        </div>
+        <div class="flex items-center gap-3">
+             <a asp-controller="Home" asp-action="Index" class="flex items-center justify-center gap-2 rounded-lg border border-[#dbe0e6] bg-white px-4 py-2 text-sm font-medium text-[#111418] hover:bg-gray-50 dark:border-gray-800 dark:bg-surface-dark dark:text-white dark:hover:bg-gray-800 transition-colors">
+                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                Volver al Panel
+            </a>
+        </div>
+    </div>
+</header>
+
+<div class="p-6">
+    <div class="mx-auto max-w-[1400px]">
+        
+        <!-- Controls -->
+        <div class="flex justify-between items-center mb-4">
+            <div class="text-sm text-[#617589] dark:text-gray-400">
+                Total de registros: <span class="font-bold text-[#111418] dark:text-white">@totalItems</span>
+            </div>
+            
+            <form method="get" class="flex items-center gap-2">
+                <label class="text-sm text-[#617589] dark:text-gray-400">Mostrar:</label>
+                <select name="pageSize" onchange="this.form.submit()" class="h-9 rounded-lg border border-[#dbe0e6] bg-white px-3 text-sm text-[#111418] focus:border-primary focus:outline-none dark:border-gray-800 dark:bg-[#1a2632] dark:text-white">
+                    <!option value="10" @(pageSize == 10 ? "selected" : "")>10</!option>
+                    <!option value="25" @(pageSize == 25 ? "selected" : "")>25</!option>
+                    <!option value="50" @(pageSize == 50 ? "selected" : "")>50</!option>
+                    <!option value="100" @(pageSize == 100 ? "selected" : "")>100</!option>
+                </select>
+                <input type="hidden" name="page" value="1" />
+            </form>
+        </div>
+
+        <!-- Table -->
+        <div class="rounded-xl border border-[#dbe0e6] bg-white shadow-sm dark:border-gray-800 dark:bg-[#1a2632] overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-[#111418] dark:text-white">
+                    <thead class="bg-gray-50 text-xs uppercase text-[#617589] dark:bg-gray-800/50 dark:text-gray-400">
+                        <tr>
+                            <th class="px-6 py-4 font-bold">Fecha</th>
+                            <th class="px-6 py-4 font-bold">Producto</th>
+                            <th class="px-6 py-4 font-bold">Código</th>
+                            <th class="px-6 py-4 font-bold">Acción</th>
+                            <th class="px-6 py-4 font-bold text-center">Cambio</th>
+                            <th class="px-6 py-4 font-bold text-right">Nuevo Stock</th>
+                            <th class="px-6 py-4 font-bold">Usuario</th>
+                            <th class="px-6 py-4 font-bold">Descripción</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#dbe0e6] dark:divide-gray-800">
+                        @foreach (var item in Model)
+                        {
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-[#617589] dark:text-gray-400">
+                                    @item.Date.ToString("dd/MM/yyyy HH:mm")
+                                </td>
+                                <td class="px-6 py-4 font-medium">
+                                    @(item.Product?.Name ?? "Producto Eliminado")
+                                </td>
+                                <td class="px-6 py-4 text-[#617589] dark:text-gray-400">
+                                    @(item.Product?.Barcode ?? "-")
+                                </td>
+                                <td class="px-6 py-4">
+                                     <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold @(item.QuantityChange < 0 ? "bg-red-50 text-red-600 dark:bg-red-900/20" : "bg-green-50 text-green-600 dark:bg-green-900/20")">
+                                        @item.Action
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-center font-bold @(item.QuantityChange < 0 ? "text-red-500" : "text-green-500")">
+                                    @(item.QuantityChange > 0 ? "+" : "")@item.QuantityChange
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    @item.NewStock
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-2">
+                                        <div class="size-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-[10px] font-bold text-primary">
+                                            @((item.User?.UserName ?? "S")[0].ToString().ToUpper())
+                                        </div>
+                                        <span class="text-xs">@(item.User?.UserName ?? "Sistema")</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-[#617589] dark:text-gray-400 max-w-xs truncate" title="@item.Description">
+                                    @item.Description
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination Footer -->
+            @if (totalPages > 1)
+            {
+                <div class="bg-gray-50 px-6 py-4 flex justify-between items-center border-t border-[#dbe0e6] dark:bg-gray-800/50 dark:border-gray-800">
+                    <div class="text-sm text-[#617589] dark:text-gray-400">
+                        Página @currentPage de @totalPages
+                    </div>
+                    <div class="flex gap-2">
+                        @if (currentPage > 1)
+                        {
+                            <a asp-action="History" asp-route-page="@(currentPage - 1)" asp-route-pageSize="@pageSize" class="flex items-center justify-center size-9 rounded-lg border border-[#dbe0e6] bg-white text-[#617589] hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors">
+                                <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+                            </a>
+                        }
+                        
+                        <!-- Simple Pagination Logic: Show current, prev, next, first, last -->
+                        @{
+                            var startPage = Math.Max(1, currentPage - 2);
+                            var endPage = Math.Min(totalPages, currentPage + 2);
+
+                             if (startPage > 1)
+                            {
+                                 <a asp-action="History" asp-route-page="1" asp-route-pageSize="@pageSize" class="flex items-center justify-center size-9 rounded-lg border border-[#dbe0e6] bg-white text-[#617589] hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors">1</a>
+                                 if (startPage > 2) { <span class="flex items-center justify-center size-9 text-gray-400">...</span> }
+                            }
+
+                            for (int i = startPage; i <= endPage; i++)
+                            {
+                                if (i == currentPage)
+                                {
+                                    <span class="flex items-center justify-center size-9 rounded-lg bg-primary text-white font-medium shadow-sm">@i</span>
+                                }
+                                else
+                                {
+                                    <a asp-action="History" asp-route-page="@i" asp-route-pageSize="@pageSize" class="flex items-center justify-center size-9 rounded-lg border border-[#dbe0e6] bg-white text-[#617589] hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors">@i</a>
+                                }
+                            }
+
+                            if (endPage < totalPages)
+                            {
+                                if (endPage < totalPages - 1) { <span class="flex items-center justify-center size-9 text-gray-400">...</span> }
+                                <a asp-action="History" asp-route-page="@totalPages" asp-route-pageSize="@pageSize" class="flex items-center justify-center size-9 rounded-lg border border-[#dbe0e6] bg-white text-[#617589] hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors">@totalPages</a>
+                            }
+                        }
+
+                        @if (currentPage < totalPages)
+                        {
+                            <a asp-action="History" asp-route-page="@(currentPage + 1)" asp-route-pageSize="@pageSize" class="flex items-center justify-center size-9 rounded-lg border border-[#dbe0e6] bg-white text-[#617589] hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors">
+                                <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
