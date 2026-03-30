@@ -24,9 +24,13 @@ RUN dotnet publish ./SistemaInventario/SistemaInventario.csproj \
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
 
+# Instalar tzdata para soporte de zonas horarias
+RUN apt-get update && apt-get install -y tzdata && rm -rf /var/lib/apt/lists/*
+
 # Configuración de entorno
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV ASPNETCORE_URLS=http://+:8080
+ENV TZ=America/Guatemala
 
 # Copiar archivos publicados desde la etapa de build
 COPY --from=build /app/publish .

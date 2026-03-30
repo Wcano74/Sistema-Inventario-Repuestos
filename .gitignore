@@ -65,3 +65,5 @@ Distribucion_Cliente/
 ## Database backups (contain sensitive data, do not upload)
 backups/*.bak
 backups/*.log
+
+/net-commander

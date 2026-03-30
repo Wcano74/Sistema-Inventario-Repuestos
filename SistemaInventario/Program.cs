@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using SistemaInventario.Data;
 using SistemaInventario.Models.Entities;
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,6 +46,15 @@ builder.Services.AddControllersWithViews()
     });
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<SistemaInventario.Services.IConfigurationService, SistemaInventario.Services.ConfigurationService>();
+
+// Configurar localización a Español Guatemala
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    var supportedCultures = new[] { new CultureInfo("es-GT") };
+    options.DefaultRequestCulture = new RequestCulture("es-GT");
+    options.SupportedCultures = supportedCultures;
+    options.SupportedUICultures = supportedCultures;
+});
 
 var app = builder.Build();
 
@@ -88,6 +99,15 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseStaticFiles();
+
+// Habilitar localización por defecto
+var supportedCultures = new[] { new CultureInfo("es-GT") };
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture("es-GT"),
+    SupportedCultures = supportedCultures,
+    SupportedUICultures = supportedCultures
+});
 
 app.UseRouting();
 

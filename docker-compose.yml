@@ -18,6 +18,7 @@ services:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=SistemaInventario77!
       - MSSQL_PID=Express
+      - TZ=America/Guatemala
     ports:
       - "1433:1433"
     volumes:
@@ -40,6 +41,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=SistemaInventarioDB;User Id=sa;Password=SistemaInventario77!;TrustServerCertificate=True;MultipleActiveResultSets=true;Encrypt=False
+      - TZ=America/Guatemala
     ports:
       - "8080:8080"
     volumes:
