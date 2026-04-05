@@ -71,6 +71,8 @@ namespace SistemaInventario.Controllers
 
             var products = await _context.Products
                 .Include(p => p.Category)
+                .Include(p => p.WarehouseLocation)
+                    .ThenInclude(wl => wl.WarehouseRack)
                 .Where(p => p.Name.Contains(term) || p.Barcode.Contains(term))
                 .OrderBy(p => p.Name)
                 .Take(5)
@@ -87,6 +89,8 @@ namespace SistemaInventario.Controllers
             var query = _context.Products
                 .Include(p => p.Category)
                 .Include(p => p.Supplier)
+                .Include(p => p.WarehouseLocation)
+                    .ThenInclude(wl => wl.WarehouseRack)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -167,6 +171,9 @@ namespace SistemaInventario.Controllers
             var product = await _context.Products
                 .Include(p => p.Category)
                 .Include(p => p.Supplier)
+                .Include(p => p.WarehouseLocation)
+                    .ThenInclude(wl => wl.WarehouseRack)
+                        .ThenInclude(r => r.Warehouse)
                 .Include(p => p.HistoryLogs).ThenInclude(h => h.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
             
@@ -204,6 +211,7 @@ namespace SistemaInventario.Controllers
             
             ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name");
             ViewData["SupplierId"] = new SelectList(_context.Suppliers, "Id", "Name");
+            ViewData["WarehouseLocationId"] = await GetLocationSelectList();
             return View();
         }
 
@@ -211,7 +219,7 @@ namespace SistemaInventario.Controllers
         [HttpPost]
         [Route("crear")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Description,Barcode,Price,Cost,StockQuantity,MinStock,ImageUrl,CategoryId,SupplierId")] Product product, IFormFile? imageFile)
+        public async Task<IActionResult> Create([Bind("Id,Name,Description,Barcode,Price,Cost,StockQuantity,MinStock,ImageUrl,CategoryId,SupplierId,WarehouseLocationId")] Product product, IFormFile? imageFile)
         {
             if (!await CanPerformVendedorAction("Vendedor_CanEditStock")) return Forbid();
             if (ModelState.IsValid)
@@ -227,6 +235,7 @@ namespace SistemaInventario.Controllers
                         ModelState.AddModelError("ImageUrl", "Archivo no válido. Solo se permiten imágenes (jpg, png, webp, gif) de hasta 5MB.");
                         ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", product.CategoryId);
                         ViewData["SupplierId"] = new SelectList(_context.Suppliers, "Id", "Name", product.SupplierId);
+                        ViewData["WarehouseLocationId"] = await GetLocationSelectList(product.WarehouseLocationId);
                         return View(product);
                     }
                 }
@@ -253,6 +262,7 @@ namespace SistemaInventario.Controllers
             }
             ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", product.CategoryId);
             ViewData["SupplierId"] = new SelectList(_context.Suppliers, "Id", "Name", product.SupplierId);
+            ViewData["WarehouseLocationId"] = await GetLocationSelectList(product.WarehouseLocationId);
             return View(product);
         }
 
@@ -268,6 +278,16 @@ namespace SistemaInventario.Controllers
             
             ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", product.CategoryId);
             ViewData["SupplierId"] = new SelectList(_context.Suppliers, "Id", "Name", product.SupplierId);
+            
+            if (product.WarehouseLocationId.HasValue)
+            {
+                var loc = await _context.WarehouseLocations.Include(l => l.WarehouseRack).FirstOrDefaultAsync(l => l.Id == product.WarehouseLocationId);
+                if (loc != null)
+                {
+                    ViewBag.SelectedRackId = loc.WarehouseRackId;
+                    ViewBag.SelectedWarehouseId = loc.WarehouseRack.WarehouseId;
+                }
+            }
             return View(product);
         }
 
@@ -275,7 +295,7 @@ namespace SistemaInventario.Controllers
         [HttpPost]
         [Route("editar/{id}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Barcode,Price,Cost,StockQuantity,MinStock,ImageUrl,CategoryId,SupplierId,Brand,IsActive")] Product product, IFormFile? imageFile)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Barcode,Price,Cost,StockQuantity,MinStock,ImageUrl,CategoryId,SupplierId,Brand,IsActive,WarehouseLocationId")] Product product, IFormFile? imageFile)
         {
             if (!await CanPerformVendedorAction("Vendedor_CanEditStock")) return Forbid();
             if (id != product.Id) return NotFound();
@@ -301,6 +321,7 @@ namespace SistemaInventario.Controllers
                             ModelState.AddModelError("ImageUrl", "Archivo no válido. Solo se permiten imágenes (jpg, png, webp, gif) de hasta 5MB.");
                             ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", product.CategoryId);
                             ViewData["SupplierId"] = new SelectList(_context.Suppliers, "Id", "Name", product.SupplierId);
+                            ViewData["WarehouseLocationId"] = await GetLocationSelectList(product.WarehouseLocationId);
                             return View(product);
                         }
                     }
@@ -322,6 +343,7 @@ namespace SistemaInventario.Controllers
                     if (originalProduct.Brand != product.Brand) changes.Add($"Marca: {originalProduct.Brand ?? "N/A"} -> {product.Brand ?? "N/A"}");
                     if (originalProduct.IsActive != product.IsActive) changes.Add(product.IsActive ? "Reactivado" : "Desactivado");
                     if (originalProduct.ImageUrl != product.ImageUrl) changes.Add("Imagen actualizada");
+                    if (originalProduct.WarehouseLocationId != product.WarehouseLocationId) changes.Add("Ubicación cambiada");
 
                     if (changes.Any())
                     {
@@ -349,6 +371,15 @@ namespace SistemaInventario.Controllers
             }
             ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", product.CategoryId);
             ViewData["SupplierId"] = new SelectList(_context.Suppliers, "Id", "Name", product.SupplierId);
+            if (product.WarehouseLocationId.HasValue)
+            {
+                var loc = await _context.WarehouseLocations.Include(l => l.WarehouseRack).FirstOrDefaultAsync(l => l.Id == product.WarehouseLocationId);
+                if (loc != null)
+                {
+                    ViewBag.SelectedRackId = loc.WarehouseRackId;
+                    ViewBag.SelectedWarehouseId = loc.WarehouseRack.WarehouseId;
+                }
+            }
             return View(product);
         }
 
@@ -435,6 +466,56 @@ namespace SistemaInventario.Controllers
         private bool ProductExists(int id)
         {
             return _context.Products.Any(e => e.Id == id);
+        }
+
+        [HttpGet("~/api/warehouses")]
+        public async Task<IActionResult> GetWarehouses()
+        {
+            var warehouses = await _context.Warehouses
+                .Where(w => w.IsActive)
+                .OrderBy(w => w.Name)
+                .Select(w => new { id = w.Id, name = w.Name })
+                .ToListAsync();
+            return Json(warehouses);
+        }
+
+        [HttpGet("~/api/racks/{warehouseId}")]
+        public async Task<IActionResult> GetRacksByWarehouse(int warehouseId)
+        {
+            var racks = await _context.WarehouseRacks
+                .Where(r => r.WarehouseId == warehouseId && r.IsActive)
+                .OrderBy(r => r.Name)
+                .Select(r => new { id = r.Id, name = r.Name })
+                .ToListAsync();
+            return Json(racks);
+        }
+
+        [HttpGet("~/api/locations/{rackId}")]
+        public async Task<IActionResult> GetLocationsByRack(int rackId)
+        {
+            var locations = await _context.WarehouseLocations
+                .Where(l => l.WarehouseRackId == rackId)
+                .OrderBy(l => l.Row)
+                .Select(l => new { id = l.Id, name = "Fila " + l.Row })
+                .ToListAsync();
+            return Json(locations);
+        }
+
+        private async Task<SelectList> GetLocationSelectList(int? selectedId = null)
+        {
+            var locations = await _context.WarehouseLocations
+                .Include(l => l.WarehouseRack)
+                .Where(l => l.WarehouseRack != null && l.WarehouseRack.IsActive)
+                .OrderBy(l => l.WarehouseRack!.Name)
+                .ThenBy(l => l.Row)
+                .Select(l => new {
+                    l.Id,
+                    DisplayName = l.WarehouseRack!.Name + "-F" + l.Row +
+                        (l.Description != null ? " (" + l.Description + ")" : "")
+                })
+                .ToListAsync();
+
+            return new SelectList(locations, "Id", "DisplayName", selectedId);
         }
     }
 }

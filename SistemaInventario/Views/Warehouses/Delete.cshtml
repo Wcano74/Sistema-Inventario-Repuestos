@@ -1,0 +1,54 @@
+@model SistemaInventario.Models.Entities.Warehouse
+@{
+    ViewData["Title"] = "Eliminar Bodega";
+}
+
+<header class="w-full bg-white/80 dark:bg-[#1a2632]/90 backdrop-blur-md sticky top-0 z-10 border-b border-[#dbe0e6] dark:border-gray-800 px-6 py-4">
+    <div class="flex flex-wrap justify-between items-center gap-4 max-w-[800px] mx-auto">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-[#111418] dark:text-white text-2xl font-bold leading-tight">Eliminar Bodega</h2>
+            <p class="text-[#617589] dark:text-gray-400 text-sm font-normal">Estás a un paso de eliminar esta bodega</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a asp-action="Index" class="flex items-center justify-center gap-2 rounded-lg border border-[#dbe0e6] bg-white px-4 py-2 text-sm font-medium text-[#111418] hover:bg-gray-50 dark:border-gray-800 dark:bg-surface-dark dark:text-white dark:hover:bg-gray-800 transition-colors">
+                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                Cancelar
+            </a>
+        </div>
+    </div>
+</header>
+
+<div class="p-6">
+    <div class="mx-auto max-w-[600px] flex flex-col gap-6">
+        <div asp-validation-summary="ModelOnly" class="rounded-xl bg-red-50 p-4 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400"></div>
+
+        <div class="bg-red-50 border border-red-100 rounded-2xl p-6 dark:bg-red-900/10 dark:border-red-900/30 flex items-start gap-4">
+            <span class="material-symbols-outlined text-red-500 text-3xl shrink-0">warning</span>
+            <div class="flex flex-col gap-2">
+                <h3 class="text-red-800 dark:text-red-400 font-bold">¿Estás seguro de eliminar esta bodega?</h3>
+                <p class="text-red-600/80 dark:text-red-400/80 text-sm">
+                    Esta acción eliminará la bodega "@Model.Name" y todos los estantes asociados (<span>@Model.Racks.Count</span>). 
+                    No podrás eliminar esta bodega si alguno de los estantes tiene productos almacenados.
+                </p>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-[#1a2632] rounded-3xl border border-[#dbe0e6] dark:border-gray-800 shadow-sm p-6 flex flex-col gap-4">
+            <div class="flex gap-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50">
+                <span class="material-symbols-outlined text-gray-400">warehouse</span>
+                <div class="flex-1 flex flex-col">
+                    <span class="text-xs font-bold text-[#617589] uppercase">Nombre</span>
+                    <span class="text-[#111418] dark:text-white font-medium">@Model.Name</span>
+                </div>
+            </div>
+
+            <form asp-action="Delete" class="flex justify-end gap-3 mt-4 pt-4 border-t border-[#f0f2f4] dark:border-gray-800">
+                <input type="hidden" asp-for="Id" />
+                <button type="submit" class="h-12 px-6 flex items-center justify-center gap-2 rounded-xl bg-red-600 text-white hover:bg-red-700 transition-colors font-bold">
+                    <span class="material-symbols-outlined text-[20px]">delete_forever</span>
+                    Sí, eliminar bodega
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

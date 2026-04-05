@@ -12,6 +12,7 @@
                 <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Marca</th>
                 <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">SKU</th>
                 <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Categoría</th>
+                <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Ubicación</th>
                 <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Stock</th>
                 <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Precio</th>
                 <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Estado</th>
@@ -68,6 +69,19 @@
                             <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400">
                                 @item.Category.Name
                             </span>
+                        }
+                    </td>
+                    <td class="px-6 py-4">
+                        @if (item.WarehouseLocation != null && item.WarehouseLocation.WarehouseRack != null)
+                        {
+                            <span class="inline-flex items-center gap-1 rounded-md bg-blue-50 dark:bg-blue-900/20 px-2 py-1 text-xs font-bold text-primary dark:text-blue-400">
+                                <span class="material-symbols-outlined text-[14px]">pin_drop</span>
+                                @(item.WarehouseLocation.WarehouseRack.Warehouse?.Name) - @item.WarehouseLocation.LocationCode
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="text-sm text-[#617589] dark:text-gray-400">-</span>
                         }
                     </td>
                     <td class="px-6 py-4">

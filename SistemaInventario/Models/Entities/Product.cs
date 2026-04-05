@@ -50,6 +50,10 @@ namespace SistemaInventario.Models.Entities
         public int? SupplierId { get; set; }
         public Supplier? Supplier { get; set; }
 
+        [Display(Name = "Ubicación")]
+        public int? WarehouseLocationId { get; set; }
+        public WarehouseLocation? WarehouseLocation { get; set; }
+
         public ICollection<Adjustment> Adjustments { get; set; } = new List<Adjustment>();
         public ICollection<SaleDetail> SaleDetails { get; set; } = new List<SaleDetail>();
         public ICollection<ProductHistory> HistoryLogs { get; set; } = new List<ProductHistory>();

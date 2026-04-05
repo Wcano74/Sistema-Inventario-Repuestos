@@ -127,6 +127,28 @@
                             </select>
                         </div>
                     </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-semibold text-[#111418] dark:text-white">
+                            Ubicación en Bodega
+                            <span class="text-xs text-gray-400 font-normal">(Opcional)</span>
+                        </label>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <select id="warehouseSelect" class="h-11 rounded-lg border border-[#dbe0e6] bg-white px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white">
+                                <option value="">-- Bodega --</option>
+                            </select>
+                            <select id="rackSelect" disabled class="h-11 rounded-lg border border-[#dbe0e6] bg-white px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white disabled:bg-gray-100 disabled:text-gray-400 dark:disabled:bg-gray-800/50">
+                                <option value="">-- Estante --</option>
+                            </select>
+                            <select asp-for="WarehouseLocationId" id="WarehouseLocationId" disabled class="h-11 rounded-lg border border-[#dbe0e6] bg-white px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white disabled:bg-gray-100 disabled:text-gray-400 dark:disabled:bg-gray-800/50">
+                                <option value="">-- Fila --</option>
+                            </select>
+                        </div>
+                        <span asp-validation-for="WarehouseLocationId" class="text-xs text-red-500"></span>
+                        <p class="text-xs text-[#617589]">
+                            <span class="material-symbols-outlined text-[14px] align-middle">info</span>
+                            Indica dónde se almacena este producto seleccionando de izquierda a derecha
+                        </p>
+                    </div>
                     <!-- Image Upload Section -->
                     <div class="flex flex-col gap-3">
                         <label class="text-sm font-semibold text-[#111418] dark:text-white">Imagen del Producto</label>
@@ -331,6 +353,81 @@
                 };
                 img.src = url;
             }, 500);
+        });
+        // Cascading Dropdowns for Locations
+        const warehouseSelect = document.getElementById('warehouseSelect');
+        const rackSelect = document.getElementById('rackSelect');
+        const locationSelect = document.getElementById('WarehouseLocationId');
+        
+        const initialWarehouseId = '@(ViewBag.SelectedWarehouseId?.ToString() ?? "")';
+        const initialRackId = '@(ViewBag.SelectedRackId?.ToString() ?? "")';
+        const initialLocationId = '@(Model.WarehouseLocationId?.ToString() ?? "")';
+
+        // Load Bodegas on init
+        fetch('/api/warehouses')
+            .then(r => r.json())
+            .then(data => {
+                data.forEach(w => {
+                    const opt = new Option(w.name, w.id);
+                    if (initialWarehouseId && w.id == initialWarehouseId) opt.selected = true;
+                    warehouseSelect.add(opt);
+                });
+                
+                if (initialWarehouseId) {
+                    loadRacks(initialWarehouseId, initialRackId);
+                }
+            });
+
+        function loadRacks(warehouseId, selectedRackId = null) {
+            fetch('/api/racks/' + warehouseId)
+                .then(r => r.json())
+                .then(data => {
+                    rackSelect.innerHTML = '<option value="">-- Estante --</option>';
+                    data.forEach(r => {
+                        const opt = new Option(r.name, r.id);
+                        if (selectedRackId && r.id == selectedRackId) opt.selected = true;
+                        rackSelect.add(opt);
+                    });
+                    rackSelect.disabled = false;
+                    
+                    if (selectedRackId) {
+                        loadLocations(selectedRackId, initialLocationId);
+                    }
+                });
+        }
+
+        function loadLocations(rackId, selectedLocationId = null) {
+            fetch('/api/locations/' + rackId)
+                .then(r => r.json())
+                .then(data => {
+                    locationSelect.innerHTML = '<option value="">-- Fila --</option>';
+                    data.forEach(l => {
+                        const opt = new Option(l.name, l.id);
+                        if (selectedLocationId && l.id == selectedLocationId) opt.selected = true;
+                        locationSelect.add(opt);
+                    });
+                    locationSelect.disabled = false;
+                });
+        }
+
+        warehouseSelect.addEventListener('change', function() {
+            rackSelect.innerHTML = '<option value="">-- Estante --</option>';
+            locationSelect.innerHTML = '<option value="">-- Fila --</option>';
+            rackSelect.disabled = true;
+            locationSelect.disabled = true;
+
+            if (this.value) {
+                loadRacks(this.value);
+            }
+        });
+
+        rackSelect.addEventListener('change', function() {
+            locationSelect.innerHTML = '<option value="">-- Fila --</option>';
+            locationSelect.disabled = true;
+
+            if (this.value) {
+                loadLocations(this.value);
+            }
         });
     </script>
 }

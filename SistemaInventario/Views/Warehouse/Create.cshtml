@@ -1,0 +1,109 @@
+@model SistemaInventario.Models.Entities.WarehouseRack
+@{
+    ViewData["Title"] = "Nuevo Estante";
+}
+
+<header class="w-full bg-white/80 dark:bg-[#1a2632]/90 backdrop-blur-md sticky top-0 z-10 border-b border-[#dbe0e6] dark:border-gray-800 px-6 py-4">
+    <div class="flex flex-wrap justify-between items-center gap-4 max-w-[800px] mx-auto">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-[#111418] dark:text-white text-2xl font-bold leading-tight">Nuevo Estante</h2>
+            <p class="text-[#617589] dark:text-gray-400 text-sm font-normal">Registra un estante físico en tu bodega</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a asp-action="Index" class="flex items-center justify-center gap-2 rounded-lg border border-[#dbe0e6] bg-white px-4 py-2 text-sm font-medium text-[#111418] hover:bg-gray-50 dark:border-gray-800 dark:bg-surface-dark dark:text-white dark:hover:bg-gray-800 transition-colors">
+                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                Cancelar
+            </a>
+        </div>
+    </div>
+</header>
+
+<div class="p-6">
+    <div class="mx-auto max-w-[600px]">
+        <form asp-action="Create" class="flex flex-col gap-6">
+            <div asp-validation-summary="ModelOnly" class="rounded-xl bg-red-50 p-4 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400"></div>
+
+            <div class="bg-white dark:bg-[#1a2632] rounded-3xl border border-[#dbe0e6] dark:border-gray-800 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-[#f0f2f4] dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 flex items-center gap-3">
+                    <span class="material-symbols-outlined text-primary">shelves</span>
+                    <h3 class="text-sm font-bold text-[#111418] dark:text-white uppercase tracking-wider">Detalles del Estante</h3>
+                </div>
+                <div class="p-8 flex flex-col gap-6">
+                    <div class="flex flex-col gap-2">
+                        <label asp-for="WarehouseId" class="text-sm font-semibold text-[#111418] dark:text-white">Bodega Padre</label>
+                        <select asp-for="WarehouseId" asp-items="ViewBag.WarehouseId" class="h-12 rounded-xl border border-[#dbe0e6] bg-white px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white">
+                            <option value="">-- Selecciona una bodega --</option>
+                        </select>
+                        <span asp-validation-for="WarehouseId" class="text-xs text-red-500"></span>
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        <label asp-for="Name" class="text-sm font-semibold text-[#111418] dark:text-white">Nombre / Código del Estante</label>
+                        <input asp-for="Name" class="h-12 rounded-xl border border-[#dbe0e6] bg-white px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white" placeholder="Ej: A, B, Rack-01" />
+                        <span asp-validation-for="Name" class="text-xs text-red-500"></span>
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        <label asp-for="Description" class="text-sm font-semibold text-[#111418] dark:text-white">Descripción (Opcional)</label>
+                        <textarea asp-for="Description" rows="3" class="rounded-xl border border-[#dbe0e6] bg-white p-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white" placeholder="Ej: Estante junto a la entrada principal, filtros de aceite..."></textarea>
+                        <span asp-validation-for="Description" class="text-xs text-red-500"></span>
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        <label asp-for="NumberOfRows" class="text-sm font-semibold text-[#111418] dark:text-white">Número de Filas</label>
+                        <input asp-for="NumberOfRows" type="number" min="1" max="20" class="h-12 rounded-xl border border-[#dbe0e6] bg-white px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white" />
+                        <span asp-validation-for="NumberOfRows" class="text-xs text-red-500"></span>
+                        <p class="text-xs text-[#617589]">
+                            <span class="material-symbols-outlined text-[14px] align-middle">info</span>
+                            Se generarán automáticamente las filas del estante (de 1 a @Model.NumberOfRows)
+                        </p>
+                    </div>
+
+                    <!-- Preview dinámico de filas -->
+                    <div id="rowsPreview" class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-[#dbe0e6] dark:border-gray-700">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Vista previa de ubicaciones</p>
+                        <div id="previewContainer" class="flex flex-col gap-1"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 py-4">
+                <a asp-action="Index" class="h-12 px-6 flex items-center justify-center rounded-xl border border-[#dbe0e6] text-[#111418] dark:border-gray-800 dark:text-white hover:bg-gray-50 transition-colors font-bold">Cancelar</a>
+                <button type="submit" class="h-12 px-10 flex items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-blue-500/30 hover:bg-blue-600 transition-all font-bold">
+                    Guardar Estante
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        const nameInput = document.querySelector('[name="Name"]');
+        const rowsInput = document.querySelector('[name="NumberOfRows"]');
+        const previewContainer = document.getElementById('previewContainer');
+
+        function updatePreview() {
+            const name = nameInput.value || '?';
+            const rows = Math.min(parseInt(rowsInput.value) || 0, 20);
+            previewContainer.innerHTML = '';
+            for (let i = 1; i <= rows; i++) {
+                previewContainer.innerHTML += `
+                    <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-[#dbe0e6] dark:border-gray-700">
+                        <span class="material-symbols-outlined text-[16px] text-primary">pin_drop</span>
+                        <span class="text-xs font-mono font-bold text-primary">${name}-F${i}</span>
+                        <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+                        <span class="text-xs text-gray-400">Vacía</span>
+                    </div>`;
+            }
+            if (rows === 0) {
+                previewContainer.innerHTML = '<p class="text-xs text-gray-400 text-center py-2">Ingresa un nombre y número de filas para ver la vista previa</p>';
+            }
+        }
+
+        nameInput.addEventListener('input', updatePreview);
+        rowsInput.addEventListener('input', updatePreview);
+        updatePreview();
+    </script>
+}

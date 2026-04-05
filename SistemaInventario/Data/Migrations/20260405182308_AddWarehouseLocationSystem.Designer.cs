@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SistemaInventario.Data;
 
@@ -11,9 +12,11 @@ using SistemaInventario.Data;
 namespace SistemaInventario.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260405182308_AddWarehouseLocationSystem")]
+    partial class AddWarehouseLocationSystem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -369,12 +372,9 @@ namespace SistemaInventario.Data.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
 
                     b.ToTable("Categories");
                 });
@@ -964,34 +964,6 @@ namespace SistemaInventario.Data.Migrations
                     b.ToTable("SystemConfigurations");
                 });
 
-            modelBuilder.Entity("SistemaInventario.Models.Entities.Warehouse", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("Warehouses");
-                });
-
             modelBuilder.Entity("SistemaInventario.Models.Entities.WarehouseLocation", b =>
                 {
                     b.Property<int>("Id")
@@ -1038,15 +1010,7 @@ namespace SistemaInventario.Data.Migrations
                     b.Property<int>("NumberOfRows")
                         .HasColumnType("int");
 
-                    b.Property<int>("WarehouseId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.HasIndex("WarehouseId");
 
                     b.ToTable("WarehouseRacks");
                 });
@@ -1184,13 +1148,12 @@ namespace SistemaInventario.Data.Migrations
                     b.HasOne("SistemaInventario.Models.Entities.Category", "Category")
                         .WithMany("Products")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("SistemaInventario.Models.Entities.Supplier", "Supplier")
                         .WithMany("Products")
-                        .HasForeignKey("SupplierId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("SupplierId");
 
                     b.HasOne("SistemaInventario.Models.Entities.WarehouseLocation", "WarehouseLocation")
                         .WithMany("Products")
@@ -1368,17 +1331,6 @@ namespace SistemaInventario.Data.Migrations
                     b.Navigation("WarehouseRack");
                 });
 
-            modelBuilder.Entity("SistemaInventario.Models.Entities.WarehouseRack", b =>
-                {
-                    b.HasOne("SistemaInventario.Models.Entities.Warehouse", "Warehouse")
-                        .WithMany("Racks")
-                        .HasForeignKey("WarehouseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Warehouse");
-                });
-
             modelBuilder.Entity("SistemaInventario.Models.Entities.CashRegister", b =>
                 {
                     b.Navigation("Sales");
@@ -1433,11 +1385,6 @@ namespace SistemaInventario.Data.Migrations
             modelBuilder.Entity("SistemaInventario.Models.Entities.Supplier", b =>
                 {
                     b.Navigation("Products");
-                });
-
-            modelBuilder.Entity("SistemaInventario.Models.Entities.Warehouse", b =>
-                {
-                    b.Navigation("Racks");
                 });
 
             modelBuilder.Entity("SistemaInventario.Models.Entities.WarehouseLocation", b =>

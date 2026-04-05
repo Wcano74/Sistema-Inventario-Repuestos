@@ -29,12 +29,59 @@ namespace SistemaInventario.Data
         public DbSet<Expense> Expenses { get; set; }
         public DbSet<SaleRefund> SaleRefunds { get; set; }
         public DbSet<SaleRefundDetail> SaleRefundDetails { get; set; }
-
+        public DbSet<Warehouse> Warehouses { get; set; }
+        public DbSet<WarehouseRack> WarehouseRacks { get; set; }
+        public DbSet<WarehouseLocation> WarehouseLocations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
             
+            // Unique constraints
+            builder.Entity<Category>()
+                .HasIndex(c => c.Name)
+                .IsUnique();
+
+            builder.Entity<Warehouse>()
+                .HasIndex(w => w.Name)
+                .IsUnique();
+
+            builder.Entity<WarehouseRack>()
+                .HasIndex(r => r.Name)
+                .IsUnique();
+
+            // Product Relationships
+            builder.Entity<Product>()
+                .HasOne(p => p.Category)
+                .WithMany(c => c.Products)
+                .HasForeignKey(p => p.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Product>()
+                .HasOne(p => p.Supplier)
+                .WithMany(s => s.Products)
+                .HasForeignKey(p => p.SupplierId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Warehouse Location Relationships
+            builder.Entity<WarehouseRack>()
+                .HasOne(r => r.Warehouse)
+                .WithMany(w => w.Racks)
+                .HasForeignKey(r => r.WarehouseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<WarehouseLocation>()
+                .HasOne(l => l.WarehouseRack)
+                .WithMany(r => r.Locations)
+                .HasForeignKey(l => l.WarehouseRackId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Product>()
+                .HasOne(p => p.WarehouseLocation)
+                .WithMany(l => l.Products)
+                .HasForeignKey(p => p.WarehouseLocationId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             builder.Entity<ApplicationUser>()
                 .Property(u => u.Salary)
                 .HasPrecision(18, 2);
@@ -146,6 +193,8 @@ namespace SistemaInventario.Data
             builder.Entity<SaleRefundDetail>()
                 .Property(srd => srd.Subtotal)
                 .HasPrecision(18, 2);
+
+
 
         }
     }

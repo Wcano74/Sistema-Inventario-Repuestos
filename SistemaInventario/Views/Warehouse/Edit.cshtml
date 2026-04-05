@@ -1,0 +1,113 @@
+@model SistemaInventario.Models.Entities.WarehouseRack
+@{
+    ViewData["Title"] = "Editar Estante";
+}
+
+<header class="w-full bg-white/80 dark:bg-[#1a2632]/90 backdrop-blur-md sticky top-0 z-10 border-b border-[#dbe0e6] dark:border-gray-800 px-6 py-4">
+    <div class="flex flex-wrap justify-between items-center gap-4 max-w-[800px] mx-auto">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-[#111418] dark:text-white text-2xl font-bold leading-tight">Editar Estante</h2>
+            <p class="text-[#617589] dark:text-gray-400 text-sm font-normal">Modifica la configuración del estante "@Model.Name"</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a asp-action="Index" class="flex items-center justify-center gap-2 rounded-lg border border-[#dbe0e6] bg-white px-4 py-2 text-sm font-medium text-[#111418] hover:bg-gray-50 dark:border-gray-800 dark:bg-surface-dark dark:text-white dark:hover:bg-gray-800 transition-colors">
+                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                Cancelar
+            </a>
+        </div>
+    </div>
+</header>
+
+<div class="p-6">
+    <div class="mx-auto max-w-[600px]">
+        <form asp-action="Edit" class="flex flex-col gap-6">
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="rounded-xl bg-red-50 p-4 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400"></div>
+
+            <div class="bg-white dark:bg-[#1a2632] rounded-3xl border border-[#dbe0e6] dark:border-gray-800 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-[#f0f2f4] dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 flex items-center gap-3">
+                    <span class="material-symbols-outlined text-primary">shelves</span>
+                    <h3 class="text-sm font-bold text-[#111418] dark:text-white uppercase tracking-wider">Detalles del Estante</h3>
+                </div>
+                <div class="p-8 flex flex-col gap-6">
+                    <div class="flex flex-col gap-2">
+                        <label asp-for="WarehouseId" class="text-sm font-semibold text-[#111418] dark:text-white">Bodega Padre</label>
+                        <select asp-for="WarehouseId" asp-items="ViewBag.WarehouseId" class="h-12 rounded-xl border border-[#dbe0e6] bg-white px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white">
+                            <option value="">-- Selecciona una bodega --</option>
+                        </select>
+                        <span asp-validation-for="WarehouseId" class="text-xs text-red-500"></span>
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        <label asp-for="Name" class="text-sm font-semibold text-[#111418] dark:text-white">Nombre / Código del Estante</label>
+                        <input asp-for="Name" class="h-12 rounded-xl border border-[#dbe0e6] bg-white px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white" placeholder="Ej: A, B, Rack-01" />
+                        <span asp-validation-for="Name" class="text-xs text-red-500"></span>
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        <label asp-for="Description" class="text-sm font-semibold text-[#111418] dark:text-white">Descripción (Opcional)</label>
+                        <textarea asp-for="Description" rows="3" class="rounded-xl border border-[#dbe0e6] bg-white p-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white" placeholder="Ej: Estante junto a la entrada principal..."></textarea>
+                        <span asp-validation-for="Description" class="text-xs text-red-500"></span>
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        <label asp-for="NumberOfRows" class="text-sm font-semibold text-[#111418] dark:text-white">Número de Filas</label>
+                        <input asp-for="NumberOfRows" type="number" min="1" max="20" class="h-12 rounded-xl border border-[#dbe0e6] bg-white px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white" />
+                        <span asp-validation-for="NumberOfRows" class="text-xs text-red-500"></span>
+                        <p class="text-xs text-[#617589]">
+                            <span class="material-symbols-outlined text-[14px] align-middle">warning</span>
+                            Si reduces filas, las ubicaciones superiores sin productos asignados se eliminarán
+                        </p>
+                    </div>
+
+                    <!-- Toggle Estado -->
+                    <div class="flex items-center justify-between py-3 px-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                        <div class="flex flex-col">
+                            <label asp-for="IsActive" class="text-sm font-semibold text-[#111418] dark:text-white">Estado del Estante</label>
+                            <p class="text-xs text-[#617589]">Los estantes inactivos no aparecen al asignar ubicaciones</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" asp-for="IsActive" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                        </label>
+                    </div>
+
+                    <!-- Ubicaciones actuales -->
+                    <div class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-[#dbe0e6] dark:border-gray-700">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Ubicaciones actuales</p>
+                        <div class="flex flex-col gap-1">
+                            @foreach (var loc in Model.Locations.OrderBy(l => l.Row))
+                            {
+                                var productCount = loc.Products.Count;
+                                <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-[#dbe0e6] dark:border-gray-700">
+                                    <span class="material-symbols-outlined text-[16px] text-primary">pin_drop</span>
+                                    <span class="text-xs font-mono font-bold text-primary">@Model.Name-F@loc.Row</span>
+                                    <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+                                    @if (productCount > 0)
+                                    {
+                                        <span class="text-xs font-bold text-green-600 dark:text-green-400">@productCount producto(s)</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-xs text-gray-400">Vacía</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 py-4">
+                <a asp-action="Index" class="h-12 px-6 flex items-center justify-center rounded-xl border border-[#dbe0e6] text-[#111418] dark:border-gray-800 dark:text-white hover:bg-gray-50 transition-colors font-bold">Cancelar</a>
+                <button type="submit" class="h-12 px-10 flex items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-blue-500/30 hover:bg-blue-600 transition-all font-bold">
+                    Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

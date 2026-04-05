@@ -1,0 +1,60 @@
+@model SistemaInventario.Models.Entities.WarehouseRack
+@{
+    ViewData["Title"] = "Eliminar Estante";
+}
+
+<div class="p-6">
+    <div class="mx-auto max-w-[500px] flex flex-col gap-6 pt-12">
+        <div class="bg-white dark:bg-[#1a2632] rounded-3xl border border-[#dbe0e6] dark:border-gray-800 shadow-xl overflow-hidden">
+            <div class="p-8 flex flex-col items-center text-center gap-4">
+                <div class="size-20 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mb-2">
+                    <span class="material-symbols-outlined text-red-500 text-[40px]">delete_forever</span>
+                </div>
+                <h3 class="text-xl font-bold text-[#111418] dark:text-white">¿Eliminar Estante?</h3>
+                <p class="text-sm text-[#617589] dark:text-gray-400">
+                    Estás a punto de eliminar el estante <span class="font-bold text-[#111418] dark:text-white">"@Model.Name"</span>
+                    con <span class="font-bold">@Model.Locations.Count fila(s)</span>.
+                    Esta acción no se puede deshacer.
+                </p>
+
+                @{
+                    var totalProducts = Model.Locations.Sum(l => l.Products.Count);
+                }
+                @if (totalProducts > 0)
+                {
+                    <div class="w-full bg-red-50 dark:bg-red-900/20 rounded-xl p-4 mt-2 text-left">
+                        <div class="flex items-center gap-2 text-red-600 dark:text-red-400">
+                            <span class="material-symbols-outlined text-[18px]">warning</span>
+                            <p class="text-sm font-bold">Este estante tiene @totalProducts producto(s) asignados</p>
+                        </div>
+                        <p class="text-xs text-red-500 mt-1">Reasigna los productos a otro estante antes de eliminar.</p>
+                    </div>
+                }
+
+                <div class="w-full bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mt-2 text-left">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Ubicaciones del estante</p>
+                    <div class="flex flex-wrap gap-1">
+                        @foreach (var loc in Model.Locations.OrderBy(l => l.Row))
+                        {
+                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-white dark:bg-gray-800 border border-[#dbe0e6] dark:border-gray-700 text-xs font-mono font-bold text-primary">
+                                @Model.Name-F@loc.Row
+                            </span>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-0 border-t border-[#f0f2f4] dark:border-gray-800">
+                <a asp-action="Index" class="flex-1 h-16 flex items-center justify-center text-sm font-bold text-[#617589] hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-r border-[#f0f2f4] dark:border-gray-800">
+                    Cancelar
+                </a>
+                <form asp-action="Delete" class="flex-1">
+                    <input type="hidden" asp-for="Id" />
+                    <button type="submit" class="w-full h-16 flex items-center justify-center text-sm font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                        Sí, Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

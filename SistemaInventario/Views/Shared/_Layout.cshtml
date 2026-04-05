@@ -81,7 +81,7 @@
                             <span class="material-symbols-outlined text-[24px]">dashboard</span>
                             <span class="text-sm font-semibold">Dashboard</span>
                         </a>
-                        <a asp-controller="Products" asp-action="Index" class="flex items-center gap-3 px-3 py-2.5 rounded-lg @(new[] { "Products", "Categories", "Suppliers" }.Contains(ViewContext.RouteData.Values["controller"]?.ToString()) ? "bg-primary/10 text-primary dark:text-blue-400" : "text-[#617589] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800") transition-colors group">
+                        <a asp-controller="Products" asp-action="Index" class="flex items-center gap-3 px-3 py-2.5 rounded-lg @(new[] { "Products", "Categories", "Suppliers", "Warehouse" }.Contains(ViewContext.RouteData.Values["controller"]?.ToString()) ? "bg-primary/10 text-primary dark:text-blue-400" : "text-[#617589] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800") transition-colors group">
                             <span class="material-symbols-outlined text-[24px]">inventory_2</span>
                             <span class="text-sm font-medium">Inventario</span>
                         </a>
@@ -89,6 +89,7 @@
                             <a asp-controller="Categories" asp-action="Index" class="text-xs px-2 py-1.5 rounded-md @(ViewContext.RouteData.Values["controller"]?.ToString() == "Categories" ? "text-primary font-bold" : "text-[#617589] hover:text-[#111418] dark:hover:text-white") transition-colors">Categorías</a>
                             <a asp-controller="Suppliers" asp-action="Index" class="text-xs px-2 py-1.5 rounded-md @(ViewContext.RouteData.Values["controller"]?.ToString() == "Suppliers" ? "text-primary font-bold" : "text-[#617589] hover:text-[#111418] dark:hover:text-white") transition-colors">Proveedores</a>
                             <a asp-controller="PurchaseOrders" asp-action="Index" class="text-xs px-2 py-1.5 rounded-md @(ViewContext.RouteData.Values["controller"]?.ToString() == "PurchaseOrders" ? "text-primary font-bold" : "text-[#617589] hover:text-[#111418] dark:hover:text-white") transition-colors">Pedidos</a>
+                            <a asp-controller="Warehouses" asp-action="Index" class="text-xs px-2 py-1.5 rounded-md @(ViewContext.RouteData.Values["controller"]?.ToString() == "Warehouses" ? "text-primary font-bold" : "text-[#617589] hover:text-[#111418] dark:hover:text-white") transition-colors">Bodegas y Ubicaciones</a>
                         </div>
                         @if (!User.IsInRole("Bodeguero"))
                         {

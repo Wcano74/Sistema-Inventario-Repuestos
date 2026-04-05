@@ -106,13 +106,20 @@ namespace SistemaInventario.Controllers
                 return RedirectToAction("Index", "Products");
             }
             // We pass the list of products to the view for the selector
-            ViewBag.Products = _context.Products.Select(p => new {
+            ViewBag.Products = _context.Products
+                .Include(p => p.WarehouseLocation)
+                    .ThenInclude(wl => wl.WarehouseRack)
+                        .ThenInclude(r => r.Warehouse)
+                .Select(p => new {
                 p.Id,
                 p.Name,
                 p.Price,
                 p.StockQuantity,
                 p.Barcode,
-                p.ImageUrl
+                p.ImageUrl,
+                LocationCode = p.WarehouseLocation != null && p.WarehouseLocation.WarehouseRack != null && p.WarehouseLocation.WarehouseRack.Warehouse != null
+                    ? p.WarehouseLocation.WarehouseRack.Warehouse.Name + " - " + p.WarehouseLocation.WarehouseRack.Name + "-F" + p.WarehouseLocation.Row
+                    : (string?)null
             }).ToList();
             
             // Load customers for selector

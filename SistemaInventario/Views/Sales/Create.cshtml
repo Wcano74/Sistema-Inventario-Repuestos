@@ -512,9 +512,9 @@
                 return;
             }
 
-            const matches = allProducts.filter(p => 
-                (p.Name && p.Name.toLowerCase().includes(term)) || 
-                (p.Barcode && p.Barcode.includes(term))
+            const matches = allProducts.filter(p =>
+                (p.Name && p.Name.toLowerCase().includes(term)) ||
+                (p.Barcode && p.Barcode.toLowerCase().includes(term))
             );
 
             renderResults(matches);
@@ -540,7 +540,11 @@
                     <div class="shrink-0">${imgHtml}</div>
                     <div class="flex-1">
                         <div class="text-sm font-bold text-[#111418] dark:text-white group-hover:text-primary transition-colors">${p.Name}</div>
-                        <div class="text-xs text-[#617589] dark:text-gray-400">SKU: ${p.Barcode || 'N/A'} • Stock: <span class="${p.StockQuantity <= 5 ? 'text-red-500 font-bold' : ''}">${p.StockQuantity}</span></div>
+                        <div class="text-xs text-[#617589] dark:text-gray-400">
+                            SKU: ${p.Barcode || 'N/A'} • 
+                            Stock: <span class="${p.StockQuantity <= 5 ? 'text-red-500 font-bold' : ''}">${p.StockQuantity}</span>
+                            ${p.LocationCode ? ` • <span class="inline-flex items-center gap-0.5 rounded bg-blue-50 dark:bg-blue-900/20 px-1 py-0.5 text-[10px] font-bold text-primary dark:text-blue-400 border border-blue-100 dark:border-blue-900/30"><span class="material-symbols-outlined text-[12px]">pin_drop</span>${p.LocationCode}</span>` : ''}
+                        </div>
                     </div>
                     <div class="text-sm font-black text-primary">@symbol${p.Price.toFixed(2)}</div>
                 `;
