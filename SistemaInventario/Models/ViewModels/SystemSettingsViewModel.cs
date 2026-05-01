@@ -26,6 +26,7 @@ namespace SistemaInventario.Models.ViewModels
         public bool Customer_AllowQuickCreate { get; set; }
         public bool POSCart_AutoSave { get; set; }
         public int POSCart_ExpirationMinutes { get; set; }
+        public decimal POS_MaxDiscountPercent { get; set; } = 50;
 
         // Caja
         public bool CashRegister_RequireOpen { get; set; }

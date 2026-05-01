@@ -12,11 +12,28 @@
 
 <style>
     @@media print {
+        @@page { 
+            size: auto;
+            margin: 0mm; 
+        }
+        body {
+            margin: 0px;
+            background-color: white !important;
+        }
+        .main-content { 
+            padding: 0 !important; 
+            margin: 0 !important;
+        }
         .no-print { display: none !important; }
         aside { display: none !important; }
         header { border-bottom: none !important; }
-        .main-content { padding: 0 !important; }
-        .invoice-card { border: none !important; shadow: none !important; }
+        .invoice-card { 
+            border: none !important; 
+            box-shadow: none !important;
+            padding: 20mm !important; /* Margin for content instead of browser margin */
+            width: 100% !important;
+            max-width: none !important;
+        }
     }
 </style>
 
@@ -87,6 +104,7 @@
                             <th class="pb-4">DESCRIPCIÓN</th>
                             <th class="pb-4 text-center">CANT.</th>
                             <th class="pb-4 text-right">PRECIO UNIT.</th>
+                            <th class="pb-4 text-right">DESC.</th>
                             <th class="pb-4 text-right">SUBTOTAL</th>
                         </tr>
                     </thead>
@@ -94,9 +112,16 @@
                         @foreach (var detail in Model.SaleDetails)
                         {
                             <tr>
-                                <td class="py-5 font-medium text-[#111418] dark:text-white">@detail.Product?.Name</td>
+                                <td class="py-5">
+                                    <span class="font-medium text-[#111418] dark:text-white block">@detail.Product?.Name</span>
+                                    @if (!string.IsNullOrEmpty(detail.Product?.Barcode))
+                                    {
+                                        <span class="text-xs text-[#617589] dark:text-gray-400 font-mono">Cód: @detail.Product.Barcode</span>
+                                    }
+                                </td>
                                 <td class="py-5 text-center text-[#111418] dark:text-white">@detail.Quantity</td>
                                 <td class="py-5 text-right text-[#617589] dark:text-gray-400">@symbol@detail.UnitPrice.ToString("N2")</td>
+                                <td class="py-5 text-right text-orange-500 font-medium">@(detail.DiscountAmount > 0 ? $"-{symbol}{detail.DiscountAmount:N2}" : "-")</td>
                                 <td class="py-5 text-right font-bold text-[#111418] dark:text-white">@symbol@detail.Subtotal.ToString("N2")</td>
                             </tr>
                         }
@@ -112,11 +137,11 @@
                 <div class="w-full sm:w-64 flex flex-col gap-4">
                     <div class="flex justify-between items-center text-[#617589] dark:text-gray-400">
                         <span class="text-sm font-bold">SUBTOTAL</span>
-                        <span class="font-medium">@symbol@Model.Total.ToString("N2")</span>
+                        <span class="font-medium">@symbol@((Model.Total + Model.DiscountAmount).ToString("N2"))</span>
                     </div>
-                    <div class="flex justify-between items-center text-[#617589] dark:text-gray-400">
+                    <div class="flex justify-between items-center text-orange-500">
                         <span class="text-sm font-bold">DESCUENTO</span>
-                        <span class="font-medium">@symbol@("0.00")</span>
+                        <span class="font-medium">-@symbol@Model.DiscountAmount.ToString("N2")</span>
                     </div>
                     <div class="h-px bg-[#f0f2f4] dark:bg-gray-800 my-1"></div>
                     <div class="flex justify-between items-center py-2 px-4 bg-primary text-white rounded-xl shadow-lg shadow-blue-500/20">

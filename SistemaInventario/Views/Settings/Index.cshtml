@@ -149,6 +149,11 @@
                             <input asp-for="POSCart_ExpirationMinutes" type="number" class="w-full rounded-lg border border-[#dbe0e6] bg-white p-2.5 text-sm text-[#111418] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
                             <span asp-validation-for="POSCart_ExpirationMinutes" class="text-xs text-red-500"></span>
                         </div>
+                        <div>
+                            <label asp-for="POS_MaxDiscountPercent" class="mb-2 block text-sm font-bold text-[#111418] dark:text-white">% Máximo de Descuento (Sobre Ganancia)</label>
+                            <input asp-for="POS_MaxDiscountPercent" type="number" step="0.01" min="0" max="100" class="w-full rounded-lg border border-[#dbe0e6] bg-white p-2.5 text-sm text-[#111418] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+                            <span asp-validation-for="POS_MaxDiscountPercent" class="text-xs text-red-500"></span>
+                        </div>
                     </div>
                 </div>
             </div>

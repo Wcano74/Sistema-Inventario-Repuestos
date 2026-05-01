@@ -76,6 +76,7 @@
                         <tr class="text-[11px] font-bold text-[#617589] dark:text-gray-400 uppercase tracking-widest border-b border-[#f0f2f4] dark:border-gray-700">
                             <th class="px-6 py-4">Producto</th>
                             <th class="px-6 py-4 text-center">Cantidad</th>
+                            <th class="px-6 py-4 text-center">% Desc.</th>
                             <th class="px-6 py-4 text-right">Unitario</th>
                             <th class="px-6 py-4 text-right">Subtotal</th>
                             <th class="px-6 py-4 text-center"></th>
@@ -128,10 +129,29 @@
                         <span class="text-sm">Impuestos (IVA 0%)</span>
                         <span class="font-medium">@(symbol)@("0.00")</span>
                     </div>
+                    <div class="flex justify-between items-center text-orange-600 dark:text-orange-400 font-bold">
+                        <span class="text-sm">Descuento Total</span>
+                        <span id="summaryDiscount">@(symbol)@("0.00")</span>
+                    </div>
                     <div class="h-px bg-dashed border-t border-dashed border-[#dbe0e6] dark:border-gray-700 my-2"></div>
                     <div class="flex justify-between items-center">
                         <span class="text-base font-bold text-[#111418] dark:text-white">Total a Pagar</span>
                         <span id="grandTotal" class="text-3xl font-black text-primary">@(symbol)@("0.00")</span>
+                    </div>
+                </div>
+
+                <!-- Global Discount Control -->
+                <div class="p-4 rounded-xl border border-primary/20 bg-primary/5">
+                    <label class="text-[10px] font-black text-primary uppercase tracking-[0.1em] mb-2 block">
+                        Descuento Global (%) (Máx: @ViewBag.MaxDiscountPercent%)
+                    </label>
+                    <div class="flex items-center gap-3">
+                        <input type="range" id="globalDiscountSlider" min="0" max="@ViewBag.MaxDiscountPercent" value="0" step="1" 
+                               oninput="document.getElementById('globalDiscountInput').value = this.value; applyGlobalDiscount(this.value)"
+                               class="flex-1 accent-primary">
+                        <input type="number" id="globalDiscountInput" min="0" max="@ViewBag.MaxDiscountPercent" value="0" 
+                               oninput="document.getElementById('globalDiscountSlider').value = this.value; applyGlobalDiscount(this.value)"
+                               class="w-16 h-8 text-center text-xs font-bold rounded-lg border border-primary/30 bg-white dark:bg-gray-800 focus:outline-none focus:ring-1 focus:ring-primary">
                     </div>
                 </div>
 
@@ -286,8 +306,9 @@
         
         // POS Cart Persistence Configuration
         const CART_AUTO_SAVE = @(ViewBag.POSCartAutoSave ? "true" : "false");
-        const CART_EXPIRATION_MINUTES = @ViewBag.POSCartExpirationMinutes;
+        const CART_EXPIRATION_MINUTES = @ViewBag.POSCart_ExpirationMinutes;
         const CART_STORAGE_KEY = 'pos_cart_@User.Identity.Name';
+        const MAX_DISCOUNT_PERCENT = @ViewBag.MaxDiscountPercent;
         
         // Payment and Customer State
         let selectedPaymentMethod = '@ViewBag.DefaultPaymentMethod'; // Cash, Card, Transfer, Mixed
@@ -301,7 +322,7 @@
         const allCustomers = @Html.Raw(JsonSerializer.Serialize(ViewBag.Customers));
         
         // State
-        let cart = []; // Array of { productId, name, price, quantity, subtotal, maxStock, image }
+        let cart = []; // Array of { productId, name, price, cost, quantity, discountPercent, subtotal, maxStock, image }
 
         // ========== Customer Search Functions ==========
         const customerSearchInput = document.getElementById('customerSearch');
@@ -596,7 +617,9 @@
                     productId: product.Id,
                     name: product.Name,
                     price: product.Price,
+                    cost: product.Cost,
                     quantity: 1,
+                    discountPercent: 0,
                     subtotal: product.Price,
                     maxStock: product.StockQuantity,
                     image: product.ImageUrl
@@ -625,9 +648,48 @@
             } else {
                 item.quantity = newQty;
             }
-            item.subtotal = item.quantity * item.price;
+            calculateItemSubtotal(item);
             renderCart();
             saveCartToLocalStorage();
+        }
+
+        function updateDiscount(index, newPercent) {
+            const item = cart[index];
+            newPercent = parseFloat(newPercent) || 0;
+            
+            if (newPercent < 0) newPercent = 0;
+            if (newPercent > MAX_DISCOUNT_PERCENT) {
+                showToast('El descuento excede el máximo permitido (' + MAX_DISCOUNT_PERCENT + '%)', 'warning');
+                newPercent = MAX_DISCOUNT_PERCENT;
+            }
+
+            item.discountPercent = newPercent;
+            calculateItemSubtotal(item);
+            renderCart();
+            saveCartToLocalStorage();
+        }
+
+        function applyGlobalDiscount(percent) {
+            percent = parseFloat(percent) || 0;
+            if (percent > MAX_DISCOUNT_PERCENT) percent = MAX_DISCOUNT_PERCENT;
+            
+            cart.forEach(item => {
+                item.discountPercent = percent;
+                calculateItemSubtotal(item);
+            });
+            renderCart();
+            saveCartToLocalStorage();
+        }
+
+        function calculateItemSubtotal(item) {
+            // Profit margin logic
+            const margin = item.price - item.cost;
+            let discountPerUnit = 0;
+            if (margin > 0) {
+                discountPerUnit = margin * (item.discountPercent / 100);
+            }
+            const finalPrice = item.price - discountPerUnit;
+            item.subtotal = finalPrice * item.quantity;
         }
 
         function renderCart() {
@@ -635,7 +697,8 @@
             const rows = cartBody.querySelectorAll('tr:not(#emptyCartState)');
             rows.forEach(r => r.remove());
 
-            let total = 0;
+            let subtotalTotal = 0;
+            let totalDiscount = 0;
             let totalItems = 0;
 
             if (cart.length === 0) {
@@ -643,7 +706,13 @@
             } else {
                 emptyCartState.style.display = 'none';
                 cart.forEach((item, index) => {
-                    total += item.subtotal;
+                    const originalSubtotal = item.price * item.quantity;
+                    subtotalTotal += originalSubtotal;
+                    
+                    // Margin check for visual indicator
+                    const margin = item.price - item.cost;
+                    const isZeroMargin = margin <= 0;
+
                     totalItems += item.quantity;
                     
                     const imgHtml = item.image 
@@ -658,7 +727,7 @@
                                 ${imgHtml}
                                 <div class="flex flex-col">
                                     <span class="text-sm font-semibold text-[#111418] dark:text-white">${item.name}</span>
-                                    <span class="text-[10px] text-[#617589] dark:text-gray-400">Stock Max: ${item.maxStock}</span>
+                                    <span class="text-[10px] text-[#617589] dark:text-gray-400">Stock Max: ${item.maxStock}${isZeroMargin ? ' • <span class="text-xs text-orange-500 font-bold">Sin margen de desc.</span>' : ''}</span>
                                 </div>
                             </div>
                         </td>
@@ -674,8 +743,22 @@
                                 </button>
                             </div>
                         </td>
+                        <td class="px-6 py-4">
+                             <div class="flex items-center justify-center">
+                                <input type="number" min="0" max="${MAX_DISCOUNT_PERCENT}" step="1" 
+                                    class="w-16 h-8 text-center text-xs font-bold rounded-lg border border-[#dbe0e6] dark:border-gray-700 bg-white dark:bg-gray-900 focus:ring-primary focus:border-primary ${isZeroMargin ? 'opacity-30 pointer-events-none' : ''}" 
+                                    value="${item.discountPercent}" 
+                                    onchange="updateDiscount(${index}, this.value)">
+                                <span class="ml-1 text-xs text-gray-500">%</span>
+                            </div>
+                        </td>
                         <td class="px-6 py-4 text-right text-sm font-medium text-[#617589] dark:text-gray-400">@symbol${item.price.toFixed(2)}</td>
-                        <td class="px-6 py-4 text-right text-sm font-black text-[#111418] dark:text-white">@symbol${item.subtotal.toFixed(2)}</td>
+                        <td class="px-6 py-4 text-right">
+                             <div class="flex flex-col items-end">
+                                <span class="text-sm font-black ${item.discountPercent > 0 ? 'text-orange-500' : 'text-[#111418] dark:text-white'}">@symbol${item.subtotal.toFixed(2)}</span>
+                                ${item.discountPercent > 0 ? `<span class="text-[10px] text-gray-400 line-through">@symbol${originalSubtotal.toFixed(2)}</span>` : ''}
+                             </div>
+                        </td>
                         <td class="px-6 py-4 text-center">
                             <button onclick="removeFromCart(${index})" class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
                                 <span class="material-symbols-outlined text-[20px]">delete</span>
@@ -685,10 +768,15 @@
                     cartBody.appendChild(row);
                 });
             }
+            
+            const totalToPay = cart.reduce((sum, item) => sum + item.subtotal, 0);
+            totalDiscount = subtotalTotal - totalToPay;
 
-            const formattedTotal = '@symbol' + total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            totalSpan.textContent = formattedTotal;
-            subtotalSpan.textContent = formattedTotal;
+            const formatMoney = (val) => '@symbol' + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            
+            subtotalSpan.textContent = formatMoney(subtotalTotal);
+            document.getElementById('summaryDiscount').textContent = formatMoney(totalDiscount);
+            totalSpan.textContent = formatMoney(totalToPay);
             itemCountBadge.textContent = totalItems + ' Items';
         }
 
@@ -751,7 +839,8 @@
                 Change: change,
                 SaleDetails: cart.map(i => ({
                     ProductId: i.productId,
-                    Quantity: i.quantity
+                    Quantity: i.quantity,
+                    DiscountPercent: i.discountPercent
                 }))
             };
 

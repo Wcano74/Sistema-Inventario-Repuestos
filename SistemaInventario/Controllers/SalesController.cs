@@ -114,6 +114,7 @@ namespace SistemaInventario.Controllers
                 p.Id,
                 p.Name,
                 p.Price,
+                p.Cost,
                 p.StockQuantity,
                 p.Barcode,
                 p.ImageUrl,
@@ -153,7 +154,8 @@ namespace SistemaInventario.Controllers
             
             // POS Cart Settings
             ViewBag.POSCartAutoSave = (await _configService.GetConfigurationAsync("POSCart_AutoSave", "true")) == "true";
-            ViewBag.POSCartExpirationMinutes = int.Parse(await _configService.GetConfigurationAsync("POSCart_ExpirationMinutes", "30"));
+            ViewBag.POSCart_ExpirationMinutes = int.Parse(await _configService.GetConfigurationAsync("POSCart_ExpirationMinutes", "30"));
+            ViewBag.MaxDiscountPercent = decimal.Parse(await _configService.GetConfigurationAsync("POS_MaxDiscountPercent", "50"));
             
             return View();
         }
@@ -253,16 +255,38 @@ namespace SistemaInventario.Controllers
                     _context.Add(history);
 
                     // 4. Create Sale Detail
+                    // Apply Discount logic
+                    decimal maxDiscountPercent = decimal.Parse(await _configService.GetConfigurationAsync("POS_MaxDiscountPercent", "50"));
+                    decimal itemDiscountPercent = item.DiscountPercent;
+                    
+                    if (itemDiscountPercent > maxDiscountPercent)
+                    {
+                        return BadRequest($"El descuento para '{product.Name}' ({itemDiscountPercent}%) excede el máximo permitido ({maxDiscountPercent}%).");
+                    }
+
+                    // Discount applies ONLY to the profit margin: (Price - Cost)
+                    decimal profitMargin = product.Price - product.Cost;
+                    decimal discountPerUnit = 0;
+                    if (profitMargin > 0)
+                    {
+                        discountPerUnit = profitMargin * (itemDiscountPercent / 100);
+                    }
+                    
+                    decimal finalPrice = product.Price - discountPerUnit;
+
                     var detail = new SaleDetail
                     {
                         ProductId = item.ProductId,
                         Quantity = item.Quantity,
-                        UnitPrice = product.Price,
-                        Subtotal = product.Price * item.Quantity
+                        UnitPrice = product.Price, // Original Price
+                        DiscountPercent = itemDiscountPercent,
+                        DiscountAmount = discountPerUnit * item.Quantity,
+                        Subtotal = finalPrice * item.Quantity
                     };
                     
                     sale.SaleDetails.Add(detail);
                     sale.Total += detail.Subtotal;
+                    sale.DiscountAmount += detail.DiscountAmount;
                 }
 
                 // Update customer's last purchase date

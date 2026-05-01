@@ -40,6 +40,10 @@ namespace SistemaInventario.Models.Entities
         [Display(Name = "Detalles de Pago")]
         public string? PaymentDetails { get; set; } // JSON for mixed payments
 
+        [Column(TypeName = "decimal(18,2)")]
+        [Display(Name = "Descuento")]
+        public decimal DiscountAmount { get; set; } = 0;
+
         // Refund tracking fields
         [Display(Name = "Estado")]
         public SaleStatus Status { get; set; } = SaleStatus.Active;

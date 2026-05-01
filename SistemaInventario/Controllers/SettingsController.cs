@@ -56,6 +56,7 @@ namespace SistemaInventario.Controllers
                 Customer_AllowQuickCreate = (await _configService.GetConfigurationAsync("Customer_AllowQuickCreate", "true")) == "true",
                 POSCart_AutoSave = (await _configService.GetConfigurationAsync("POSCart_AutoSave", "true")) == "true",
                 POSCart_ExpirationMinutes = int.Parse(await _configService.GetConfigurationAsync("POSCart_ExpirationMinutes", "30")),
+                POS_MaxDiscountPercent = decimal.Parse(await _configService.GetConfigurationAsync("POS_MaxDiscountPercent", "50")),
 
                 // Caja
                 CashRegister_RequireOpen = (await _configService.GetConfigurationAsync("CashRegister_RequireOpen", "true")) == "true",
@@ -112,6 +113,7 @@ namespace SistemaInventario.Controllers
                 await UpdateConfig("Customer_AllowQuickCreate", model.Customer_AllowQuickCreate.ToString().ToLower());
                 await UpdateConfig("POSCart_AutoSave", model.POSCart_AutoSave.ToString().ToLower());
                 await UpdateConfig("POSCart_ExpirationMinutes", model.POSCart_ExpirationMinutes.ToString());
+                await UpdateConfig("POS_MaxDiscountPercent", model.POS_MaxDiscountPercent.ToString());
 
                 // Caja
                 await UpdateConfig("CashRegister_RequireOpen", model.CashRegister_RequireOpen.ToString().ToLower());
