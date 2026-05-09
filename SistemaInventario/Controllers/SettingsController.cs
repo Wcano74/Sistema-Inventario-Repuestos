@@ -7,6 +7,7 @@ using SistemaInventario.Models.Entities;
 using SistemaInventario.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using System.IO.Compression;
 
 namespace SistemaInventario.Controllers
 {
@@ -285,6 +286,7 @@ namespace SistemaInventario.Controllers
 
         private const string SqlBackupDir = "/var/opt/mssql/backups"; // Ruta dentro del contenedor SQL Server
         private const string LocalBackupDir = "/app/backups";       // Ruta dentro del contenedor webapp
+        private const string ImagesLocalDir = "/app/wwwroot/images/products"; // Ruta de imágenes
         private const string DbName = "SistemaInventarioDB";
 
         private string GetMasterConnectionString()
@@ -305,8 +307,8 @@ namespace SistemaInventario.Controllers
         {
             if (string.IsNullOrWhiteSpace(fileName)) return false;
             if (fileName.Contains("..") || fileName.Contains('/') || fileName.Contains('\\')) return false;
-            if (!fileName.EndsWith(".bak", StringComparison.OrdinalIgnoreCase)) return false;
-            return true;
+            return fileName.EndsWith(".bak", StringComparison.OrdinalIgnoreCase) || 
+                   fileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase);
         }
 
         // GET: /configuracion/respaldos
@@ -320,7 +322,9 @@ namespace SistemaInventario.Controllers
                 if (Directory.Exists(LocalBackupDir))
                 {
                     var files = new DirectoryInfo(LocalBackupDir)
-                        .GetFiles("*.bak")
+                        .GetFiles("*.*")
+                        .Where(f => f.Extension.Equals(".bak", StringComparison.OrdinalIgnoreCase) || 
+                                    f.Extension.Equals(".zip", StringComparison.OrdinalIgnoreCase))
                         .OrderByDescending(f => f.CreationTime);
 
                     foreach (var file in files)
@@ -330,14 +334,17 @@ namespace SistemaInventario.Controllers
                             FileName = file.Name,
                             SizeInBytes = file.Length,
                             SizeFormatted = FormatFileSize(file.Length),
-                            CreatedAt = file.CreationTime
+                            CreatedAt = file.CreationTime,
+                            Type = file.Extension.Equals(".bak", StringComparison.OrdinalIgnoreCase) 
+                                ? BackupType.Database 
+                                : BackupType.Images
                         });
                     }
                 }
             }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Error al leer backups: {ex.Message}";
+                TempData["Error"] = $"Error al leer respaldos: {ex.Message}";
             }
 
             return View(backups);
@@ -365,11 +372,41 @@ namespace SistemaInventario.Controllers
                 command.CommandTimeout = 120;
                 await command.ExecuteNonQueryAsync();
 
-                TempData["Success"] = $"Respaldo '{fileName}' creado exitosamente.";
+                TempData["Success"] = $"Respaldo de base de datos '{fileName}' creado exitosamente.";
             }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Error al crear respaldo: {ex.Message}";
+                TempData["Error"] = $"Error al crear respaldo de base de datos: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Backups));
+        }
+
+        // POST: /configuracion/respaldos/crear-imagenes
+        [HttpPost]
+        [Route("respaldos/crear-imagenes")]
+        [ValidateAntiForgeryToken]
+        public IActionResult CreateImageBackup()
+        {
+            try
+            {
+                Directory.CreateDirectory(LocalBackupDir);
+                var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                var fileName = $"Imagenes_Productos_{timestamp}.zip";
+                var localPath = Path.Combine(LocalBackupDir, fileName);
+
+                if (!Directory.Exists(ImagesLocalDir))
+                {
+                    Directory.CreateDirectory(ImagesLocalDir);
+                }
+
+                ZipFile.CreateFromDirectory(ImagesLocalDir, localPath);
+
+                TempData["Success"] = $"Respaldo de imágenes '{fileName}' creado exitosamente.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al crear respaldo de imágenes: {ex.Message}";
             }
 
             return RedirectToAction(nameof(Backups));
@@ -392,6 +429,12 @@ namespace SistemaInventario.Controllers
             {
                 TempData["Error"] = "El archivo de respaldo no existe.";
                 return RedirectToAction(nameof(Backups));
+            }
+
+            // Handle Image Restore
+            if (fileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+            {
+                return await RestoreImageBackupInternal(fileName);
             }
 
             var sqlPath = Path.Combine(SqlBackupDir, fileName);
@@ -441,6 +484,38 @@ namespace SistemaInventario.Controllers
                 TempData["Error"] = $"Error al restaurar: {ex.Message}";
                 return RedirectToAction(nameof(Backups));
             }
+        }
+
+        private async Task<IActionResult> RestoreImageBackupInternal(string fileName)
+        {
+            try
+            {
+                var localPath = Path.Combine(LocalBackupDir, fileName);
+                
+                // Delete individual files instead of the directory itself.
+                // The directory cannot be deleted because ASP.NET Core holds an open
+                // handle on it while serving static files (causes "Device or resource busy").
+                if (Directory.Exists(ImagesLocalDir))
+                {
+                    foreach (var file in Directory.GetFiles(ImagesLocalDir))
+                    {
+                        System.IO.File.Delete(file);
+                    }
+                }
+                else
+                {
+                    Directory.CreateDirectory(ImagesLocalDir);
+                }
+
+                ZipFile.ExtractToDirectory(localPath, ImagesLocalDir);
+
+                TempData["Success"] = $"Imágenes restauradas exitosamente desde '{fileName}'.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al restaurar imágenes: {ex.Message}";
+            }
+            return RedirectToAction(nameof(Backups));
         }
 
         // POST: /configuracion/respaldos/eliminar

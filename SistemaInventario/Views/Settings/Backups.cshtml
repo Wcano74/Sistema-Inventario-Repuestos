@@ -15,45 +15,58 @@
                 <span class="material-symbols-outlined text-[20px]">arrow_back</span>
                 Configuraci&oacute;n
             </a>
-            <form asp-action="CreateBackup" method="post" class="inline">
-                @Html.AntiForgeryToken()
-                <button type="submit" class="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white shadow-lg shadow-blue-500/20 transition-colors hover:bg-blue-600">
-                    <span class="material-symbols-outlined text-[20px]">backup</span>
-                    Crear Respaldo Ahora
-                </button>
-            </form>
+            <div class="flex gap-2">
+                <form asp-action="CreateBackup" method="post" class="inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white shadow-lg shadow-blue-500/20 transition-colors hover:bg-blue-600">
+                        <span class="material-symbols-outlined text-[20px]">database</span>
+                        Respaldar BD
+                    </button>
+                </form>
+                <form asp-action="CreateImageBackup" method="post" class="inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-green-500/20 transition-colors hover:bg-green-700">
+                        <span class="material-symbols-outlined text-[20px]">image</span>
+                        Respaldar Im&aacute;genes
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </header>
 
 <div class="p-6">
-    <div class="mx-auto flex max-w-[1000px] flex-col gap-6">
+    <div class="mx-auto flex max-w-[1000px] flex-col gap-8">
 
         <!-- Info Card -->
         <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 p-4 flex items-start gap-3">
             <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 mt-0.5">info</span>
             <div class="text-sm text-blue-800 dark:text-blue-300">
-                <p class="font-medium mb-1">Informaci&oacute;n sobre Respaldos</p>
-                <p>Los respaldos guardan una copia completa de la base de datos. Puede crear respaldos manuales, restaurar uno anterior, o descargarlos para trasladar a otra m&aacute;quina. Los archivos se almacenan en la carpeta <code class="bg-blue-100 dark:bg-blue-800 px-1 rounded">backups/</code> del proyecto.</p>
+                <p class="font-medium mb-1">Gesti&oacute;n de Respaldos</p>
+                <p>Ahora puede respaldar tanto la **Base de Datos** como las **Im&aacute;genes** de los productos. Se recomienda realizar ambos respaldos antes de cualquier cambio importante o traslado de servidor.</p>
             </div>
         </div>
 
-        <!-- Backups List Card -->
+        @{
+            var dbBackups = Model.Where(b => b.Type == SistemaInventario.Models.ViewModels.BackupType.Database).ToList();
+            var imgBackups = Model.Where(b => b.Type == SistemaInventario.Models.ViewModels.BackupType.Images).ToList();
+        }
+
+        <!-- Database Backups List -->
         <div class="bg-white dark:bg-[#1a2632] rounded-xl border border-[#e5e7eb] dark:border-gray-800 shadow-sm overflow-hidden">
             <div class="p-6 border-b border-[#f0f2f4] dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <span class="material-symbols-outlined text-primary">folder_open</span>
-                    <h3 class="text-sm font-bold text-[#111418] dark:text-white uppercase tracking-wider">Respaldos Disponibles</h3>
+                    <span class="material-symbols-outlined text-primary">database</span>
+                    <h3 class="text-sm font-bold text-[#111418] dark:text-white uppercase tracking-wider">Respaldos de Base de Datos</h3>
                 </div>
-                <span class="text-xs text-gray-500 dark:text-gray-400">@Model.Count respaldo(s)</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">@dbBackups.Count respaldo(s)</span>
             </div>
 
-            @if (!Model.Any())
+            @if (!dbBackups.Any())
             {
                 <div class="p-12 text-center">
                     <span class="material-symbols-outlined text-gray-300 dark:text-gray-600 text-[56px]">cloud_off</span>
-                    <p class="mt-3 text-[#617589] dark:text-gray-400 font-medium">No hay respaldos disponibles</p>
-                    <p class="mt-1 text-sm text-gray-400 dark:text-gray-500">Crea tu primer respaldo con el bot&oacute;n de arriba</p>
+                    <p class="mt-3 text-[#617589] dark:text-gray-400 font-medium">No hay respaldos de base de datos</p>
                 </div>
             }
             else
@@ -69,7 +82,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-[#f0f2f4] dark:divide-gray-800">
-                            @foreach (var backup in Model)
+                            @foreach (var backup in dbBackups)
                             {
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                                     <td class="px-6 py-4">
@@ -90,11 +103,79 @@
                                     </td>
                                     <td class="px-6 py-4 text-right">
                                         <div class="flex items-center justify-end gap-2">
-                                            <button type="button" onclick="openRestoreModal('@backup.FileName', '@backup.CreatedAt.ToString("dd/MM/yyyy HH:mm")')" class="flex h-8 items-center gap-1.5 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 px-3 text-xs font-medium text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors" title="Restaurar este respaldo">
+                                            <button type="button" onclick="openRestoreModal('@backup.FileName', '@backup.CreatedAt.ToString("dd/MM/yyyy HH:mm")', 'database')" class="flex h-8 items-center gap-1.5 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 px-3 text-xs font-medium text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors" title="Restaurar base de datos">
                                                 <span class="material-symbols-outlined text-[16px]">restore</span>
                                                 Restaurar
                                             </button>
-                                            <button type="button" onclick="openDeleteModal('@backup.FileName')" class="flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors" title="Eliminar respaldo">
+                                            <button type="button" onclick="openDeleteModal('@backup.FileName')" class="flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors" title="Eliminar">
+                                                <span class="material-symbols-outlined text-[16px]">delete</span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+        <!-- Image Backups List -->
+        <div class="bg-white dark:bg-[#1a2632] rounded-xl border border-[#e5e7eb] dark:border-gray-800 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-[#f0f2f4] dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-green-600">image</span>
+                    <h3 class="text-sm font-bold text-[#111418] dark:text-white uppercase tracking-wider">Respaldos de Im&aacute;genes</h3>
+                </div>
+                <span class="text-xs text-gray-500 dark:text-gray-400">@imgBackups.Count respaldo(s)</span>
+            </div>
+
+            @if (!imgBackups.Any())
+            {
+                <div class="p-12 text-center">
+                    <span class="material-symbols-outlined text-gray-300 dark:text-gray-600 text-[56px]">folder_off</span>
+                    <p class="mt-3 text-[#617589] dark:text-gray-400 font-medium">No hay respaldos de im&aacute;genes</p>
+                </div>
+            }
+            else
+            {
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="border-b border-[#dbe0e6] dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20">
+                            <tr>
+                                <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Archivo</th>
+                                <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Fecha</th>
+                                <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Tama&ntilde;o</th>
+                                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-[#f0f2f4] dark:divide-gray-800">
+                            @foreach (var backup in imgBackups)
+                            {
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+                                                <span class="material-symbols-outlined text-[20px]">folder_zip</span>
+                                            </div>
+                                            <span class="text-sm font-medium text-[#111418] dark:text-white font-mono">@backup.FileName</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-[#617589] dark:text-gray-400">
+                                        @backup.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss")
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center rounded-md bg-gray-100 dark:bg-gray-800 px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-400">
+                                            @backup.SizeFormatted
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <button type="button" onclick="openRestoreModal('@backup.FileName', '@backup.CreatedAt.ToString("dd/MM/yyyy HH:mm")', 'images')" class="flex h-8 items-center gap-1.5 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 px-3 text-xs font-medium text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors" title="Restaurar imágenes">
+                                                <span class="material-symbols-outlined text-[16px]">restore</span>
+                                                Restaurar
+                                            </button>
+                                            <button type="button" onclick="openDeleteModal('@backup.FileName')" class="flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors" title="Eliminar">
                                                 <span class="material-symbols-outlined text-[16px]">delete</span>
                                             </button>
                                         </div>
@@ -160,7 +241,7 @@
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" id="restoreFileDate"></p>
             </div>
             <div class="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-3 border border-orange-200 dark:border-orange-800">
-                <p class="text-xs text-orange-700 dark:text-orange-300"><strong>Advertencia:</strong> Esto reemplazar&aacute; todos los datos actuales con los del respaldo. La sesi&oacute;n actual se cerrar&aacute;.</p>
+                <p class="text-xs text-orange-700 dark:text-orange-300" id="restoreWarningText"></p>
             </div>
         </div>
         <div class="p-4 border-t border-[#dbe0e6] dark:border-gray-800 flex justify-end gap-3">
@@ -249,10 +330,18 @@
 
 @section Scripts {
     <script>
-        function openRestoreModal(fileName, fileDate) {
+        function openRestoreModal(fileName, fileDate, type) {
             document.getElementById('restoreFileName').textContent = fileName;
             document.getElementById('restoreFileDate').textContent = 'Creado: ' + fileDate;
             document.getElementById('restoreFileNameInput').value = fileName;
+
+            const warningText = document.getElementById('restoreWarningText');
+            if (type === 'database') {
+                warningText.innerHTML = '<strong>Advertencia:</strong> Esto reemplazar&aacute; todos los datos actuales con los del respaldo. La sesi&oacute;n actual se cerrar&aacute;.';
+            } else {
+                warningText.innerHTML = '<strong>Advertencia:</strong> Esto reemplazar&aacute; todas las im&aacute;genes de productos actuales con las del respaldo. Esta acci&oacute;n no se puede deshacer.';
+            }
+
             const modal = document.getElementById('restoreModal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
