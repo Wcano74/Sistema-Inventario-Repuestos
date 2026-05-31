@@ -69,7 +69,7 @@ jobs:
             Write-Error "DEPLOY_PATH no esta configurado en GitHub Variables."
             exit 1
           }
-          if (-not (Test-Path $env:DEPLOY_PATH)) {
+          if (-not (Test-Path "$env:DEPLOY_PATH")) {
             Write-Error "La ruta '$env:DEPLOY_PATH' no existe en este servidor."
             exit 1
           }
@@ -81,7 +81,7 @@ jobs:
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
-          Set-Location $env:DEPLOY_PATH
+          Set-Location "$env:DEPLOY_PATH"
           New-Item -ItemType Directory -Force -Path ".\backups" | Out-Null
 
           $activo = docker ps --format "{{.Names}}" | Select-String "inventario-sqlserver"
@@ -128,7 +128,7 @@ jobs:
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
-          Set-Location $env:DEPLOY_PATH
+          Set-Location "$env:DEPLOY_PATH"
           docker compose -f docker-compose.prod.yml up -d --no-build webapp
           Write-Host "Contenedor reiniciado con la nueva imagen"
 
@@ -137,7 +137,7 @@ jobs:
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
-          Set-Location $env:DEPLOY_PATH
+          Set-Location "$env:DEPLOY_PATH"
           Write-Host "Esperando que el sistema inicie (35s)..."
           Start-Sleep 35
 
@@ -168,7 +168,7 @@ jobs:
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
-          Set-Location $env:DEPLOY_PATH
+          Set-Location "$env:DEPLOY_PATH"
           Write-Host ""
           Write-Host "============================="
           Write-Host "  DEPLOY COMPLETADO"
