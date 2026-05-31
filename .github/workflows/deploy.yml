@@ -65,15 +65,16 @@ jobs:
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
-          if (-not $env:DEPLOY_PATH) {
+          $dp = $env:DEPLOY_PATH.Trim()
+          if (-not $dp) {
             Write-Error "DEPLOY_PATH no esta configurado en GitHub Variables."
             exit 1
           }
-          if (-not (Test-Path "$env:DEPLOY_PATH")) {
-            Write-Error "La ruta '$env:DEPLOY_PATH' no existe en este servidor."
+          if (-not [System.IO.Directory]::Exists($dp)) {
+            Write-Error "La ruta '$dp' no existe en este servidor."
             exit 1
           }
-          Write-Host "Ruta de deploy: $env:DEPLOY_PATH"
+          Write-Host "Ruta de deploy: $dp"
           Write-Host "Imagen: ${{ env.IMAGE }}:${{ github.sha }}"
 
       - name: Backup de base de datos pre-deploy
