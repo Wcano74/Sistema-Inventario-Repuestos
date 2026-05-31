@@ -14,7 +14,7 @@ concurrency:
 jobs:
   deploy:
     name: Build y Deploy en Produccion
-    runs-on: [self-hosted, windows]
+    runs-on: [self-hosted, inventario]
     timeout-minutes: 20
 
     steps:
