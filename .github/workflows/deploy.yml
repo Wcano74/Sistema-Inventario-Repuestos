@@ -82,7 +82,7 @@ jobs:
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
-          Set-Location "$env:DEPLOY_PATH"
+          Set-Location -LiteralPath $env:DEPLOY_PATH.Trim()
           New-Item -ItemType Directory -Force -Path ".\backups" | Out-Null
 
           $activo = docker ps --format "{{.Names}}" | Select-String "inventario-sqlserver"
@@ -129,7 +129,7 @@ jobs:
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
-          Set-Location "$env:DEPLOY_PATH"
+          Set-Location -LiteralPath $env:DEPLOY_PATH.Trim()
           docker compose -f docker-compose.prod.yml up -d --no-build webapp
           Write-Host "Contenedor reiniciado con la nueva imagen"
 
@@ -138,7 +138,7 @@ jobs:
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
-          Set-Location "$env:DEPLOY_PATH"
+          Set-Location -LiteralPath $env:DEPLOY_PATH.Trim()
           Write-Host "Esperando que el sistema inicie (35s)..."
           Start-Sleep 35
 
@@ -169,7 +169,7 @@ jobs:
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
-          Set-Location "$env:DEPLOY_PATH"
+          Set-Location -LiteralPath $env:DEPLOY_PATH.Trim()
           Write-Host ""
           Write-Host "============================="
           Write-Host "  DEPLOY COMPLETADO"
