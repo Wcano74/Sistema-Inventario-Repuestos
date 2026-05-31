@@ -86,7 +86,8 @@ Write-OK "Build completado"
 # ─── Paso 4: Deploy ────────────────────────────────────────────
 Write-Banner "Paso 4/5: Deploy"
 
-docker compose up -d --force-recreate --no-deps webapp
+docker pull ghcr.io/wcano74/sistema-inventario:latest
+docker compose -f docker-compose.prod.yml up -d --no-build webapp
 if ($LASTEXITCODE -ne 0) {
     Write-FAIL "Deploy fallo."
     exit 1

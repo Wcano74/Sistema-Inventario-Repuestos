@@ -5,29 +5,68 @@ on:
     branches:
       - master
       - main
-  workflow_dispatch:       # Permite disparar manualmente desde GitHub
+  workflow_dispatch:
 
 concurrency:
   group: production
-  cancel-in-progress: false  # Nunca cancelar un deploy en curso
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/wcano74/sistema-inventario
 
 jobs:
-  deploy:
-    name: Build y Deploy en Produccion
-    runs-on: [self-hosted, inventario]
-    timeout-minutes: 20
+  # ─────────────────────────────────────────────────────────────
+  # JOB 1: Build de la imagen Docker en la nube de GitHub
+  # Corre en servidores de GitHub (gratis, no usa la PC del cliente)
+  # ─────────────────────────────────────────────────────────────
+  build:
+    name: Build y publicar imagen
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
-      # ─────────────────────────────────────────────
-      # 1. Validar configuracion
-      # ─────────────────────────────────────────────
+      - name: Descargar codigo fuente
+        uses: actions/checkout@v4
+
+      - name: Login a GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build y push imagen a ghcr.io
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ github.sha }}
+
+  # ─────────────────────────────────────────────────────────────
+  # JOB 2: Deploy en la PC del cliente
+  # Espera a que el Job 1 termine. Solo descarga la imagen,
+  # NO necesita el código fuente.
+  # ─────────────────────────────────────────────────────────────
+  deploy:
+    name: Deploy en produccion
+    needs: build
+    runs-on: [self-hosted, inventario]
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
       - name: Validar configuracion
         shell: pwsh
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
           if (-not $env:DEPLOY_PATH) {
-            Write-Error "DEPLOY_PATH no esta configurado. Ve a GitHub > Settings > Variables > Actions y crea la variable DEPLOY_PATH con la ruta del proyecto (ej: C:\SistemaInventario)"
+            Write-Error "DEPLOY_PATH no esta configurado en GitHub Variables."
             exit 1
           }
           if (-not (Test-Path $env:DEPLOY_PATH)) {
@@ -35,13 +74,8 @@ jobs:
             exit 1
           }
           Write-Host "Ruta de deploy: $env:DEPLOY_PATH"
-          Write-Host "Commit: $env:GITHUB_SHA"
-          Write-Host "Autor: $env:GITHUB_ACTOR"
-          Write-Host "Rama: $env:GITHUB_REF_NAME"
+          Write-Host "Imagen: ${{ env.IMAGE }}:${{ github.sha }}"
 
-      # ─────────────────────────────────────────────
-      # 2. Backup de la base de datos ANTES del deploy
-      # ─────────────────────────────────────────────
       - name: Backup de base de datos pre-deploy
         shell: pwsh
         env:
@@ -50,142 +84,84 @@ jobs:
           Set-Location $env:DEPLOY_PATH
           New-Item -ItemType Directory -Force -Path ".\backups" | Out-Null
 
-          $contenedorActivo = docker ps --format "{{.Names}}" | Select-String "inventario-sqlserver"
-          if (-not $contenedorActivo) {
-            Write-Host "SQL Server no esta corriendo, omitiendo backup..."
+          $activo = docker ps --format "{{.Names}}" | Select-String "inventario-sqlserver"
+          if (-not $activo) {
+            Write-Host "SQL Server no esta corriendo, omitiendo backup."
           } else {
             $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-            $shortSha  = "$env:GITHUB_SHA".Substring(0, 7)
-            $archivo   = "SistemaInventarioDB_${timestamp}_pre-deploy_${shortSha}.bak"
+            $sha       = "${{ github.sha }}".Substring(0, 7)
+            $archivo   = "SistemaInventarioDB_${timestamp}_pre-deploy_${sha}.bak"
 
             Write-Host "Creando backup: $archivo ..."
-
             docker exec inventario-sqlserver /opt/mssql-tools18/bin/sqlcmd `
               -S localhost -U sa -P "SistemaInventario77!" -C `
-              -Q "BACKUP DATABASE [SistemaInventarioDB] TO DISK = N'/var/opt/mssql/backups/$archivo' WITH FORMAT, INIT, COMPRESSION, NAME = N'PreDeploy-$timestamp'"
+              -Q "BACKUP DATABASE [SistemaInventarioDB] TO DISK = N'/var/opt/mssql/backups/$archivo' WITH FORMAT, INIT, COMPRESSION"
 
             if ($LASTEXITCODE -ne 0) {
-              Write-Error "El backup fallo. Abortando deploy para proteger los datos."
+              Write-Error "Backup fallo. Abortando deploy."
               exit 1
             }
-
             Write-Host "Backup creado: backups\$archivo"
 
             # Mantener solo los 10 backups mas recientes
-            $baks = Get-ChildItem -Path ".\backups" -Filter "*.bak" | Sort-Object LastWriteTime -Descending
+            $baks = Get-ChildItem ".\backups" -Filter "*.bak" | Sort-Object LastWriteTime -Descending
             if ($baks.Count -gt 10) {
               $baks | Select-Object -Skip 10 | Remove-Item -Force
-              Write-Host "Limpieza: se mantienen los 10 backups mas recientes"
             }
           }
 
-      # ─────────────────────────────────────────────
-      # 3. Actualizar codigo desde GitHub
-      # ─────────────────────────────────────────────
-      - name: Actualizar codigo
+      - name: Login a GitHub Container Registry
         shell: pwsh
-        env:
-          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
-          Set-Location $env:DEPLOY_PATH
+          docker login ghcr.io `
+            --username "${{ github.actor }}" `
+            --password "${{ secrets.GITHUB_TOKEN }}"
 
-          $rama = "$env:GITHUB_REF_NAME"
-          Write-Host "Descargando cambios de rama: $rama ..."
-          git fetch origin
-
-          # Reset hard para asegurar estado limpio (descarta cambios locales)
-          git reset --hard "origin/$rama"
-
-          $commitCorto  = git rev-parse --short HEAD
-          $commitMensaje = git log -1 --pretty=%s
-          Write-Host "Codigo actualizado al commit $commitCorto : $commitMensaje"
-
-      # ─────────────────────────────────────────────
-      # 4. Build de la nueva imagen Docker
-      # ─────────────────────────────────────────────
-      - name: Build Docker
+      - name: Descargar imagen nueva
         shell: pwsh
-        env:
-          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
-          Set-Location $env:DEPLOY_PATH
+          docker pull ${{ env.IMAGE }}:latest
+          Write-Host "Imagen descargada: ${{ env.IMAGE }}:latest"
 
-          Write-Host "Construyendo imagen de la aplicacion..."
-          docker compose build --no-cache webapp
-
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "El build de Docker fallo."
-            exit 1
-          }
-          Write-Host "Build completado"
-
-      # ─────────────────────────────────────────────
-      # 5. Deploy: solo reinicia la webapp (no toca SQL Server)
-      # ─────────────────────────────────────────────
       - name: Deploy
         shell: pwsh
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
           Set-Location $env:DEPLOY_PATH
+          docker compose -f docker-compose.prod.yml up -d --no-build webapp
+          Write-Host "Contenedor reiniciado con la nueva imagen"
 
-          Write-Host "Reiniciando aplicacion web..."
-          docker compose up -d --force-recreate --no-deps webapp
-
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "El deploy fallo."
-            exit 1
-          }
-          Write-Host "Contenedor reiniciado"
-
-      # ─────────────────────────────────────────────
-      # 6. Esperar inicio y verificar salud
-      # ─────────────────────────────────────────────
       - name: Verificar salud del sistema
         shell: pwsh
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
           Set-Location $env:DEPLOY_PATH
-
           Write-Host "Esperando que el sistema inicie (35s)..."
           Start-Sleep 35
 
-          # Estado de contenedores
-          Write-Host ""
-          Write-Host "Estado de contenedores:"
-          docker compose ps
+          docker compose -f docker-compose.prod.yml ps
 
-          # Verificar que responde HTTP
-          Write-Host ""
-          Write-Host "Verificando respuesta HTTP en localhost:8080 ..."
-          $intentos = 0
-          $maxIntentos = 5
           $ok = $false
-
-          while ($intentos -lt $maxIntentos -and -not $ok) {
+          for ($i = 1; $i -le 5; $i++) {
             try {
               $r = Invoke-WebRequest -Uri "http://localhost:8080" -MaximumRedirection 5 -TimeoutSec 15 -UseBasicParsing
               Write-Host "Sistema respondiendo: HTTP $($r.StatusCode)"
               $ok = $true
+              break
             } catch {
-              $intentos++
-              Write-Host "Intento $intentos/$maxIntentos fallido, reintentando en 10s..."
+              Write-Host "Intento $i/5 fallido, reintentando en 10s..."
               Start-Sleep 10
             }
           }
 
           if (-not $ok) {
-            Write-Host ""
-            Write-Host "--- Ultimos logs del contenedor ---"
-            docker logs inventario-webapp --tail 50
+            docker logs inventario-webapp --tail 30
             Write-Error "El sistema no responde despues del deploy."
             exit 1
           }
 
-      # ─────────────────────────────────────────────
-      # 7. Resumen final (siempre se ejecuta)
-      # ─────────────────────────────────────────────
       - name: Resumen del deploy
         if: always()
         shell: pwsh
@@ -193,16 +169,13 @@ jobs:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
           Set-Location $env:DEPLOY_PATH
-          $commit  = git rev-parse --short HEAD
-          $mensaje = git log -1 --pretty=%s
-          $fecha   = Get-Date -Format "dd/MM/yyyy HH:mm:ss"
           Write-Host ""
           Write-Host "============================="
           Write-Host "  DEPLOY COMPLETADO"
           Write-Host "============================="
-          Write-Host "  Fecha:   $fecha"
-          Write-Host "  Commit:  $commit"
-          Write-Host "  Cambio:  $mensaje"
-          Write-Host "  Autor:   $env:GITHUB_ACTOR"
+          Write-Host "  Imagen:  ${{ env.IMAGE }}:latest"
+          Write-Host "  Commit:  ${{ github.sha }}"
+          Write-Host "  Autor:   ${{ github.actor }}"
+          Write-Host "  Fecha:   $(Get-Date -Format 'dd/MM/yyyy HH:mm:ss')"
           Write-Host "============================="
-          docker compose ps
+          docker compose -f docker-compose.prod.yml ps
