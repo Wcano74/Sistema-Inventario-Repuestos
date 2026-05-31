@@ -61,7 +61,7 @@ jobs:
 
     steps:
       - name: Validar configuracion
-        shell: pwsh
+        shell: powershell
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
@@ -77,7 +77,7 @@ jobs:
           Write-Host "Imagen: ${{ env.IMAGE }}:${{ github.sha }}"
 
       - name: Backup de base de datos pre-deploy
-        shell: pwsh
+        shell: powershell
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
@@ -111,20 +111,20 @@ jobs:
           }
 
       - name: Login a GitHub Container Registry
-        shell: pwsh
+        shell: powershell
         run: |
           docker login ghcr.io `
             --username "${{ github.actor }}" `
             --password "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Descargar imagen nueva
-        shell: pwsh
+        shell: powershell
         run: |
           docker pull ${{ env.IMAGE }}:latest
           Write-Host "Imagen descargada: ${{ env.IMAGE }}:latest"
 
       - name: Deploy
-        shell: pwsh
+        shell: powershell
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
@@ -133,7 +133,7 @@ jobs:
           Write-Host "Contenedor reiniciado con la nueva imagen"
 
       - name: Verificar salud del sistema
-        shell: pwsh
+        shell: powershell
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
@@ -164,7 +164,7 @@ jobs:
 
       - name: Resumen del deploy
         if: always()
-        shell: pwsh
+        shell: powershell
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
