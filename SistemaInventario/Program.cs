@@ -8,6 +8,14 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Logs en JSON para Docker (una línea por entrada, fácil de leer con docker logs)
+builder.Logging.AddJsonConsole(options =>
+{
+    options.IncludeScopes       = false;
+    options.TimestampFormat     = "yyyy-MM-dd HH:mm:ss";
+    options.JsonWriterOptions   = new System.Text.Json.JsonWriterOptions { Indented = false };
+});
+
 // Agregar servicios al contenedor
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
     ?? throw new InvalidOperationException("No se encontró la cadena de conexión 'DefaultConnection'.");
@@ -132,8 +140,6 @@ if (!app.Environment.IsDevelopment())
     // En Docker, HTTPS se gestiona con un proxy reverso (nginx, traefik, etc.)
 }
 
-app.UseMiddleware<SistemaInventario.Middleware.RequestLoggingMiddleware>();
-
 app.UseStaticFiles();
 
 // Habilitar localización por defecto
@@ -149,6 +155,9 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Middleware de logging DESPUÉS de auth para que el usuario esté disponible
+app.UseMiddleware<SistemaInventario.Middleware.RequestLoggingMiddleware>();
 
 app.MapControllerRoute(
     name: "default",
