@@ -19,13 +19,15 @@ namespace SistemaInventario.Controllers
         private readonly IConfigurationService _configService;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IHostApplicationLifetime _appLifetime;
+        private readonly IWebHostEnvironment _env;
 
-        public SettingsController(ApplicationDbContext context, IConfigurationService configService, UserManager<ApplicationUser> userManager, IHostApplicationLifetime appLifetime)
+        public SettingsController(ApplicationDbContext context, IConfigurationService configService, UserManager<ApplicationUser> userManager, IHostApplicationLifetime appLifetime, IWebHostEnvironment env)
         {
             _context = context;
             _configService = configService;
             _userManager = userManager;
             _appLifetime = appLifetime;
+            _env = env;
         }
 
         // GET: /configuracion/sistema
