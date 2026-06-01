@@ -597,5 +597,40 @@ namespace SistemaInventario.Controllers
                 return RedirectToAction(nameof(Backups));
             }
         }
+
+        // ==========================================
+        // DIAGNÓSTICO DE IMÁGENES
+        // ==========================================
+
+        [Route("diagnostico-imagenes")]
+        public async Task<IActionResult> ImageDiagnostic()
+        {
+            var products = await _context.Products
+                .Where(p => p.ImageUrl != null && p.ImageUrl != "")
+                .Select(p => new { p.Id, p.Name, p.ImageUrl })
+                .ToListAsync();
+
+            var sinImagen = await _context.Products
+                .CountAsync(p => p.ImageUrl == null || p.ImageUrl == "");
+
+            var faltantes = products
+                .Where(p => {
+                    var rel  = p.ImageUrl!.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+                    var path = Path.Combine(_env.WebRootPath, rel);
+                    return !System.IO.File.Exists(path);
+                })
+                .Select(p => new MissingImageItem { Id = p.Id, Name = p.Name, ImageUrl = p.ImageUrl })
+                .ToList();
+
+            var vm = new ImageDiagnosticViewModel
+            {
+                TotalConImagen   = products.Count,
+                TotalFaltantes   = faltantes.Count,
+                TotalSinImagen   = sinImagen,
+                ImagenesFaltantes = faltantes
+            };
+
+            return View(vm);
+        }
     }
 }

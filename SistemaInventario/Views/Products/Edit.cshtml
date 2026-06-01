@@ -163,7 +163,8 @@
                         @if (!string.IsNullOrEmpty(Model.ImageUrl))
                         {
                             <div id="currentImage" class="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-[#dbe0e6] dark:border-gray-700">
-                                <img src="@Model.ImageUrl" class="h-16 w-16 rounded-lg object-cover border border-[#dbe0e6] dark:border-gray-700" />
+                                <img src="@Model.ImageUrl" class="h-16 w-16 rounded-lg object-cover border border-[#dbe0e6] dark:border-gray-700"
+                                     onerror="this.onerror=null;this.src='/images/product-placeholder.svg'" />
                                 <div class="flex-1">
                                     <p class="text-sm font-medium text-[#111418] dark:text-white">Imagen actual</p>
                                     <p class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs">@Model.ImageUrl</p>

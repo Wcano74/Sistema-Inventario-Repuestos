@@ -4,6 +4,7 @@ using SistemaInventario.Data;
 using SistemaInventario.Models.Entities;
 using System.Globalization;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -91,12 +92,47 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+// Verificar imágenes faltantes al iniciar
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var env     = services.GetRequiredService<IWebHostEnvironment>();
+        var logger  = services.GetRequiredService<ILogger<Program>>();
+
+        var productos = await context.Products
+            .Where(p => p.ImageUrl != null && p.ImageUrl != "")
+            .Select(p => new { p.Id, p.ImageUrl })
+            .ToListAsync();
+
+        var faltantes = productos.Count(p => {
+            var rel  = p.ImageUrl!.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+            var path = Path.Combine(env.WebRootPath, rel);
+            return !File.Exists(path);
+        });
+
+        if (faltantes > 0)
+            logger.LogWarning("⚠️  IMÁGENES FALTANTES: {Faltantes}/{Total} productos tienen imagen en BD pero el archivo no existe en disco.", faltantes, productos.Count);
+        else if (productos.Count > 0)
+            logger.LogInformation("✅ Imágenes: {Total} archivos presentes en disco.", productos.Count);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogWarning("No se pudo verificar imágenes al iniciar: {Error}", ex.Message);
+    }
+}
+
 // Configurar el pipeline HTTP
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     // En Docker, HTTPS se gestiona con un proxy reverso (nginx, traefik, etc.)
 }
+
+app.UseMiddleware<SistemaInventario.Middleware.RequestLoggingMiddleware>();
 
 app.UseStaticFiles();
 

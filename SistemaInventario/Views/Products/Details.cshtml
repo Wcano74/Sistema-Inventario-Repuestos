@@ -195,24 +195,20 @@
             <div class="w-full lg:w-[360px] flex flex-col gap-6">
                 <!-- Image Card -->
                 <div class="bg-white dark:bg-[#1a2632] rounded-xl border border-[#e5e7eb] dark:border-gray-800 p-4 shadow-sm flex flex-col gap-4">
-                    @if (!string.IsNullOrEmpty(product.ImageUrl))
-                    {
-                        <div class="w-full bg-[#f6f7f8] dark:bg-gray-800 rounded-lg overflow-hidden relative group cursor-pointer" onclick="openLightbox()">
-                            <img src="@product.ImageUrl" class="w-full max-h-[320px] object-contain p-2" alt="@product.Name" />
+                    <div class="w-full bg-[#f6f7f8] dark:bg-gray-800 rounded-lg overflow-hidden relative group @(!string.IsNullOrEmpty(product.ImageUrl) ? "cursor-pointer" : "")" @(!string.IsNullOrEmpty(product.ImageUrl) ? "onclick=\"openLightbox()\"" : "")>
+                        <img src="@(string.IsNullOrEmpty(product.ImageUrl) ? "/images/product-placeholder.svg" : product.ImageUrl)"
+                             class="w-full max-h-[320px] object-contain p-2"
+                             alt="@product.Name"
+                             onerror="this.onerror=null;this.src='/images/product-placeholder.svg';this.closest('[onclick]')?.removeAttribute('onclick')" />
+                        @if (!string.IsNullOrEmpty(product.ImageUrl))
+                        {
                             <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                                 <div class="bg-black/50 rounded-full p-2">
                                     <span class="material-symbols-outlined text-white text-3xl">zoom_in</span>
                                 </div>
                             </div>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="aspect-[4/3] w-full bg-[#f6f7f8] dark:bg-gray-800 rounded-lg flex flex-col items-center justify-center text-gray-400 gap-2">
-                            <span class="material-symbols-outlined text-5xl">image_not_supported</span>
-                            <span class="text-xs font-medium">Sin Imagen</span>
-                        </div>
-                    }
+                        }
+                    </div>
                 </div>
 
                 <!-- Lightbox Modal -->
