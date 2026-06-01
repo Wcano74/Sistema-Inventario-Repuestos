@@ -1,106 +1,93 @@
 # ==============================================================
 # deploy-manual.ps1
-# Ejecuta el mismo proceso de deploy que el CI/CD pero manualmente.
-# Util para el primer despliegue o si necesitas forzar un update.
-# ==============================================================
+# Deploy manual de emergencia — modelo ghcr.io (sin codigo fuente)
+#
 # Uso:
-#   cd C:\SistemaInventario
+#   cd "D:\Repuestos Davis"
 #   .\scripts\deploy-manual.ps1
 # ==============================================================
 
-param(
-    [string]$Rama = "main"
-)
-
 $ErrorActionPreference = "Stop"
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$deployPath = Split-Path -Parent $scriptDir
-Set-Location $deployPath
+$deployPath = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
+$image      = "ghcr.io/wcano74/sistema-inventario:latest"
+$composeFile = Join-Path $deployPath "docker-compose.prod.yml"
 
-function Write-Banner($texto) {
+function Write-Banner($t) {
     Write-Host ""
     Write-Host "========================================" -ForegroundColor Cyan
-    Write-Host "  $texto" -ForegroundColor Cyan
+    Write-Host "  $t" -ForegroundColor Cyan
     Write-Host "========================================" -ForegroundColor Cyan
 }
+function Write-OK($t)   { Write-Host "[OK] $t" -ForegroundColor Green }
+function Write-WARN($t) { Write-Host "[!!] $t" -ForegroundColor Yellow }
+function Write-FAIL($t) { Write-Host "[XX] $t" -ForegroundColor Red }
 
-function Write-OK($texto)    { Write-Host "[OK] $texto" -ForegroundColor Green }
-function Write-WARN($texto)  { Write-Host "[!!] $texto" -ForegroundColor Yellow }
-function Write-FAIL($texto)  { Write-Host "[XX] $texto" -ForegroundColor Red }
-
-# ─── Validaciones ──────────────────────────────────────────────
 Write-Banner "DEPLOY MANUAL - Sistema Inventario"
-Write-Host "Ruta: $deployPath"
-Write-Host "Rama: $Rama"
-Write-Host "Fecha: $(Get-Date -Format 'dd/MM/yyyy HH:mm:ss')"
+Write-Host "  Ruta:   $deployPath"
+Write-Host "  Imagen: $image"
+Write-Host "  Fecha:  $(Get-Date -Format 'dd/MM/yyyy HH:mm:ss')"
 
-if (-not (Test-Path "$deployPath\docker-compose.yml")) {
-    Write-FAIL "No se encontro docker-compose.yml en $deployPath"
+if (-not [System.IO.Directory]::Exists($deployPath)) {
+    Write-FAIL "No se encontro la carpeta: $deployPath"
+    exit 1
+}
+if (-not (Test-Path $composeFile)) {
+    Write-FAIL "No se encontro docker-compose.prod.yml en $deployPath"
     exit 1
 }
 
 # ─── Paso 1: Backup ────────────────────────────────────────────
-Write-Banner "Paso 1/5: Backup de base de datos"
+Write-Banner "Paso 1/4: Backup de base de datos"
 
-New-Item -ItemType Directory -Force -Path ".\backups" | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $deployPath "backups") | Out-Null
 
-$contenedorActivo = docker ps --format "{{.Names}}" | Select-String "inventario-sqlserver"
-if (-not $contenedorActivo) {
-    Write-WARN "SQL Server no esta corriendo, omitiendo backup"
+$activo = docker ps --format "{{.Names}}" | Select-String "inventario-sqlserver"
+if (-not $activo) {
+    Write-WARN "SQL Server no esta corriendo, omitiendo backup."
 } else {
     $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
     $archivo   = "SistemaInventarioDB_${timestamp}_manual-deploy.bak"
-
     Write-Host "Creando backup: $archivo"
+
     docker exec inventario-sqlserver /opt/mssql-tools18/bin/sqlcmd `
         -S localhost -U sa -P "SistemaInventario77!" -C `
         -Q "BACKUP DATABASE [SistemaInventarioDB] TO DISK = N'/var/opt/mssql/backups/$archivo' WITH FORMAT, INIT, COMPRESSION"
 
     if ($LASTEXITCODE -ne 0) {
-        Write-FAIL "Backup fallo. Abortando para proteger datos."
+        Write-FAIL "Backup fallo. Abortando para proteger los datos."
         exit 1
     }
     Write-OK "Backup creado: backups\$archivo"
 }
 
-# ─── Paso 2: Git pull ──────────────────────────────────────────
-Write-Banner "Paso 2/5: Actualizar codigo"
+# ─── Paso 2: Descargar imagen ──────────────────────────────────
+Write-Banner "Paso 2/4: Descargar imagen desde ghcr.io"
 
-git fetch origin
-git reset --hard "origin/$Rama"
-
-$commit  = git rev-parse --short HEAD
-$mensaje = git log -1 --pretty=%s
-Write-OK "Codigo en commit: $commit — $mensaje"
-
-# ─── Paso 3: Build ─────────────────────────────────────────────
-Write-Banner "Paso 3/5: Build Docker"
-
-docker compose build --no-cache webapp
+docker pull $image
 if ($LASTEXITCODE -ne 0) {
-    Write-FAIL "Build de Docker fallo."
+    Write-FAIL "No se pudo descargar la imagen. Verifica conexion y credenciales."
     exit 1
 }
-Write-OK "Build completado"
+Write-OK "Imagen descargada: $image"
 
-# ─── Paso 4: Deploy ────────────────────────────────────────────
-Write-Banner "Paso 4/5: Deploy"
+# ─── Paso 3: Deploy ────────────────────────────────────────────
+Write-Banner "Paso 3/4: Deploy"
 
-docker pull ghcr.io/wcano74/sistema-inventario:latest
+Set-Location -LiteralPath $deployPath
 docker compose -f docker-compose.prod.yml up -d --no-build webapp
 if ($LASTEXITCODE -ne 0) {
     Write-FAIL "Deploy fallo."
     exit 1
 }
-Write-OK "Contenedor reiniciado"
+Write-OK "Contenedor reiniciado con la nueva imagen"
 
-# ─── Paso 5: Health check ──────────────────────────────────────
-Write-Banner "Paso 5/5: Verificar salud"
+# ─── Paso 4: Health check ──────────────────────────────────────
+Write-Banner "Paso 4/4: Verificar salud del sistema"
 
 Write-Host "Esperando 35 segundos..."
 Start-Sleep 35
 
-docker compose ps
+docker compose -f docker-compose.prod.yml ps
 
 $ok = $false
 for ($i = 1; $i -le 5; $i++) {
@@ -124,8 +111,7 @@ if (-not $ok) {
 
 # ─── Resumen ───────────────────────────────────────────────────
 Write-Banner "DEPLOY COMPLETADO"
-Write-Host "  Commit:  $commit"
-Write-Host "  Cambio:  $mensaje"
-Write-Host "  Fecha:   $(Get-Date -Format 'dd/MM/yyyy HH:mm:ss')"
-Write-Host "  URL:     http://localhost:8080"
+Write-Host "  Imagen: $image"
+Write-Host "  Fecha:  $(Get-Date -Format 'dd/MM/yyyy HH:mm:ss')"
+Write-Host "  URL:    http://localhost:8080"
 Write-Host ""
