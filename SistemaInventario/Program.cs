@@ -8,13 +8,6 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Logs en JSON para Docker (una línea por entrada, fácil de leer con docker logs)
-builder.Logging.AddJsonConsole(options =>
-{
-    options.IncludeScopes       = false;
-    options.TimestampFormat     = "yyyy-MM-dd HH:mm:ss";
-    options.JsonWriterOptions   = new System.Text.Json.JsonWriterOptions { Indented = false };
-});
 
 // Agregar servicios al contenedor
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
