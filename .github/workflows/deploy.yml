@@ -65,7 +65,7 @@ jobs:
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
-          dp=$(echo "$DEPLOY_PATH" | xargs)
+          dp=$(echo "$DEPLOY_PATH" | tr -d '\r\n' | xargs)
           if [ -z "$dp" ]; then
             echo "❌ DEPLOY_PATH no esta configurado en GitHub Variables."
             exit 1
