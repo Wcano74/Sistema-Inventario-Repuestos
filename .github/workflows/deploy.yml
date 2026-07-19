@@ -47,7 +47,7 @@ jobs:
             ${{ env.IMAGE }}:${{ github.sha }}
 
   # ─────────────────────────────────────────────────────────────
-  # JOB 2: Deploy en la PC del cliente
+  # JOB 2: Deploy en la PC del cliente (Ubuntu)
   # Espera a que el Job 1 termine. Solo descarga la imagen,
   # NO necesita el código fuente.
   # ─────────────────────────────────────────────────────────────
@@ -61,122 +61,113 @@ jobs:
 
     steps:
       - name: Validar configuracion
-        shell: powershell
+        shell: bash
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
-          $dp = $env:DEPLOY_PATH.Trim()
-          if (-not $dp) {
-            Write-Error "DEPLOY_PATH no esta configurado en GitHub Variables."
+          dp=$(echo "$DEPLOY_PATH" | xargs)
+          if [ -z "$dp" ]; then
+            echo "❌ DEPLOY_PATH no esta configurado en GitHub Variables."
             exit 1
-          }
-          if (-not [System.IO.Directory]::Exists($dp)) {
-            Write-Error "La ruta '$dp' no existe en este servidor."
+          fi
+          if [ ! -d "$dp" ]; then
+            echo "❌ La ruta '$dp' no existe en este servidor."
             exit 1
-          }
-          Write-Host "Ruta de deploy: $dp"
-          Write-Host "Imagen: ${{ env.IMAGE }}:${{ github.sha }}"
+          fi
+          echo "✅ Ruta de deploy: $dp"
+          echo "   Imagen: ${{ env.IMAGE }}:${{ github.sha }}"
 
       - name: Backup de base de datos pre-deploy
-        shell: powershell
+        shell: bash
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
-          Set-Location -LiteralPath $env:DEPLOY_PATH.Trim()
-          New-Item -ItemType Directory -Force -Path ".\backups" | Out-Null
-
-          $activo = docker ps --format "{{.Names}}" | Select-String "inventario-sqlserver"
-          if (-not $activo) {
-            Write-Host "SQL Server no esta corriendo, omitiendo backup."
-          } else {
-            $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-            $sha       = "${{ github.sha }}".Substring(0, 7)
-            $archivo   = "SistemaInventarioDB_${timestamp}_pre-deploy_${sha}.bak"
-
-            Write-Host "Creando backup: $archivo ..."
-            docker exec inventario-sqlserver /opt/mssql-tools18/bin/sqlcmd `
-              -S localhost -U sa -P "SistemaInventario77!" -C `
-              -Q "BACKUP DATABASE [SistemaInventarioDB] TO DISK = N'/var/opt/mssql/backups/$archivo' WITH FORMAT, INIT, COMPRESSION"
-
-            if ($LASTEXITCODE -ne 0) {
-              Write-Error "Backup fallo. Abortando deploy."
+          cd "$DEPLOY_PATH"
+          mkdir -p backups
+          ACTIVO=$(docker ps --format "{{.Names}}" | grep "inventario-sqlserver" || true)
+          if [ -z "$ACTIVO" ]; then
+            echo "SQL Server no esta corriendo, omitiendo backup."
+          else
+            TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+            SHA="${{ github.sha }}"
+            SHORT_SHA="${SHA:0:7}"
+            ARCHIVO="SistemaInventarioDB_${TIMESTAMP}_pre-deploy_${SHORT_SHA}.bak"
+            echo "📦 Creando backup: $ARCHIVO ..."
+            docker exec inventario-sqlserver /opt/mssql-tools18/bin/sqlcmd \
+              -S localhost -U sa -P "SistemaInventario77!" -C \
+              -Q "BACKUP DATABASE [SistemaInventarioDB] TO DISK = N'/var/opt/mssql/backups/$ARCHIVO' WITH FORMAT, INIT, COMPRESSION"
+            if [ $? -ne 0 ]; then
+              echo "❌ Backup fallo. Abortando deploy."
               exit 1
-            }
-            Write-Host "Backup creado: backups\$archivo"
-
+            fi
+            echo "✅ Backup creado: backups/$ARCHIVO"
             # Mantener solo los 10 backups mas recientes
-            $baks = Get-ChildItem ".\backups" -Filter "*.bak" | Sort-Object LastWriteTime -Descending
-            if ($baks.Count -gt 10) {
-              $baks | Select-Object -Skip 10 | Remove-Item -Force
-            }
-          }
+            ls -t backups/*.bak 2>/dev/null | tail -n +11 | xargs -r rm -f
+          fi
 
       - name: Login a GitHub Container Registry
-        shell: powershell
+        shell: bash
         run: |
-          docker login ghcr.io `
-            --username "${{ github.actor }}" `
-            --password "${{ secrets.GITHUB_TOKEN }}"
+          echo "${{ secrets.GITHUB_TOKEN }}" | \
+            docker login ghcr.io --username "${{ github.actor }}" --password-stdin
 
       - name: Descargar imagen nueva
-        shell: powershell
+        shell: bash
         run: |
           docker pull ${{ env.IMAGE }}:latest
-          Write-Host "Imagen descargada: ${{ env.IMAGE }}:latest"
+          echo "✅ Imagen descargada: ${{ env.IMAGE }}:latest"
 
       - name: Deploy
-        shell: powershell
+        shell: bash
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
-          Set-Location -LiteralPath $env:DEPLOY_PATH.Trim()
+          cd "$DEPLOY_PATH"
           docker compose -f docker-compose.prod.yml up -d --no-build webapp
-          Write-Host "Contenedor reiniciado con la nueva imagen"
+          echo "✅ Contenedor reiniciado con la nueva imagen"
 
       - name: Verificar salud del sistema
-        shell: powershell
+        shell: bash
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
-          Set-Location -LiteralPath $env:DEPLOY_PATH.Trim()
-          Write-Host "Esperando que el sistema inicie (35s)..."
-          Start-Sleep 35
-
+          cd "$DEPLOY_PATH"
+          echo "⏳ Esperando que el sistema inicie (35s)..."
+          sleep 35
           docker compose -f docker-compose.prod.yml ps
-
-          $ok = $false
-          for ($i = 1; $i -le 5; $i++) {
-            try {
-              $r = Invoke-WebRequest -Uri "http://localhost:8080" -MaximumRedirection 5 -TimeoutSec 15 -UseBasicParsing
-              Write-Host "Sistema respondiendo: HTTP $($r.StatusCode)"
-              $ok = $true
+          OK=false
+          for i in 1 2 3 4 5; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-redirs 5 --location --max-time 15 http://localhost:8080 || echo "000")
+            if [ "$STATUS" = "200" ] || [ "$STATUS" = "302" ]; then
+              echo "✅ Sistema respondiendo: HTTP $STATUS"
+              OK=true
               break
-            } catch {
-              Write-Host "Intento $i/5 fallido, reintentando en 10s..."
-              Start-Sleep 10
-            }
-          }
-
-          if (-not $ok) {
+            else
+              echo "Intento $i/5 fallido (HTTP $STATUS), reintentando en 10s..."
+              sleep 10
+            fi
+          done
+          if [ "$OK" != "true" ]; then
             docker logs inventario-webapp --tail 30
-            Write-Error "El sistema no responde despues del deploy."
+            echo "❌ El sistema no responde despues del deploy."
             exit 1
-          }
+          fi
 
       - name: Resumen del deploy
         if: always()
-        shell: powershell
+        shell: bash
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
-          Set-Location -LiteralPath $env:DEPLOY_PATH.Trim()
-          Write-Host ""
-          Write-Host "============================="
-          Write-Host "  DEPLOY COMPLETADO"
-          Write-Host "============================="
-          Write-Host "  Imagen:  ${{ env.IMAGE }}:latest"
-          Write-Host "  Commit:  ${{ github.sha }}"
-          Write-Host "  Autor:   ${{ github.actor }}"
-          Write-Host "  Fecha:   $(Get-Date -Format 'dd/MM/yyyy HH:mm:ss')"
-          Write-Host "============================="
+          cd "$DEPLOY_PATH"
+          echo ""
+          echo "============================="
+          echo "  DEPLOY COMPLETADO"
+          echo "============================="
+          echo "  Imagen:  ${{ env.IMAGE }}:latest"
+          echo "  Commit:  ${{ github.sha }}"
+          echo "  Autor:   ${{ github.actor }}"
+          echo "  Fecha:   $(date '+%d/%m/%Y %H:%M:%S')"
+          echo "============================="
           docker compose -f docker-compose.prod.yml ps
+
