@@ -60,6 +60,14 @@ jobs:
       packages: read
 
     steps:
+
+      - name: Limpiar variables de entorno
+        shell: bash
+        run: |
+          CLEAN_PATH=$(echo "${{ vars.DEPLOY_PATH }}" | tr -d '\r\n' | xargs)
+          echo "DEPLOY_PATH=$CLEAN_PATH" >> $GITHUB_ENV
+          echo "✅ DEPLOY_PATH limpio: $CLEAN_PATH"
+          
       - name: Validar configuracion
         shell: bash
         env:
