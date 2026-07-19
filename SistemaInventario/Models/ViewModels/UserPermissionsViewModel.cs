@@ -10,5 +10,6 @@ namespace SistemaInventario.Models.ViewModels
         public bool CanProcessRefunds { get; set; }
         public bool CanViewAuditLog { get; set; }
         public bool CanAccessPurchases { get; set; }
+        public bool CanViewInventoryValue { get; set; }
     }
 }

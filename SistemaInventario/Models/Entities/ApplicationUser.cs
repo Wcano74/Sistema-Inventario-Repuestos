@@ -44,6 +44,9 @@ namespace SistemaInventario.Models.Entities
         // Refund Permissions
         public bool CanProcessRefunds { get; set; } = false; // Process sale refunds
 
+        // Inventory Value Permissions
+        public bool CanViewInventoryValue { get; set; } = false;
+
         public bool IsActive { get; set; } = true;
     }
 }

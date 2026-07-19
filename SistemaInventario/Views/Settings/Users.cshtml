@@ -35,6 +35,7 @@
                             <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Procesar Devoluciones</th>
                             <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Ver Bitácora</th>
                             <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Acceso a Compras</th>
+                            <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Ver Valor Inventario</th>
                             <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-gray-400">Acciones</th>
                         </tr>
                     </thead>
@@ -101,6 +102,17 @@
                                             <input type="checkbox" class="peer sr-only permission-toggle" 
                                                    data-userid="@user.UserId" data-perm="CanAccessPurchases"
                                                    @(user.CanAccessPurchases || user.Role == "Admin" ? "checked" : "")
+                                                   @(user.Role == "Admin" ? "disabled" : "")>
+                                            <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:bg-gray-700 dark:border-gray-600 @(user.Role == "Admin" ? "opacity-50 cursor-not-allowed" : "")"></div>
+                                        </label>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <div class="flex justify-center">
+                                        <label class="relative inline-flex cursor-pointer items-center">
+                                            <input type="checkbox" class="peer sr-only permission-toggle" 
+                                                   data-userid="@user.UserId" data-perm="CanViewInventoryValue"
+                                                   @(user.CanViewInventoryValue || user.Role == "Admin" ? "checked" : "")
                                                    @(user.Role == "Admin" ? "disabled" : "")>
                                             <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:bg-gray-700 dark:border-gray-600 @(user.Role == "Admin" ? "opacity-50 cursor-not-allowed" : "")"></div>
                                         </label>
