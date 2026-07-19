@@ -178,7 +178,8 @@ namespace SistemaInventario.Controllers
                     Role = roles.FirstOrDefault() ?? "Sin Rol",
                     CanProcessRefunds = user.CanProcessRefunds,
                     CanViewAuditLog = user.CanViewAuditLog,
-                    CanAccessPurchases = user.CanAccessPurchases
+                    CanAccessPurchases = user.CanAccessPurchases,
+                    CanViewInventoryValue = user.CanViewInventoryValue
                 });
             }
 
@@ -273,6 +274,9 @@ namespace SistemaInventario.Controllers
                     break;
                 case "CanAccessPurchases":
                     user.CanAccessPurchases = isGranted;
+                    break;
+                case "CanViewInventoryValue":
+                    user.CanViewInventoryValue = isGranted;
                     break;
                 default:
                     return BadRequest("Permiso desconocido");

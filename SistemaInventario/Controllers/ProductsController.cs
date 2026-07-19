@@ -147,7 +147,11 @@ namespace SistemaInventario.Controllers
 
             ViewBag.CanEditStock = await CanPerformVendedorAction("Vendedor_CanEditStock");
             ViewBag.SeeCostPrice = await CanPerformVendedorAction("Vendedor_SeeCostPrice");
-            ViewBag.SeeInventoryTotal = await CanPerformVendedorAction("Vendedor_SeeInventoryTotal");
+            
+            // Check individual user permission for Inventory Value or Admin role
+            var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.UserName == User.Identity.Name);
+            ViewBag.SeeInventoryTotal = User.IsInRole("Admin") || (currentUser != null && currentUser.CanViewInventoryValue);
+
             ViewBag.CanAddToPOS = !User.IsInRole("Bodeguero");
             // Load WhatsApp Config
             ViewBag.WhatsAppNumber = await _configService.GetConfigurationAsync("WhatsAppNumber", "");
