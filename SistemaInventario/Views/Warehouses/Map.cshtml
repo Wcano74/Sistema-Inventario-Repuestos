@@ -86,44 +86,64 @@
     }
     else
     {
-        <!-- Rejilla de Estantes 2D -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <!-- Rejilla de Estantes 2D Estilo Warehouse Industrial -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             @foreach (var rack in Model.Racks.OrderBy(r => r.Name))
             {
                 var totalProductsInRack = rack.Locations.Sum(l => l.Products.Count);
-                <div class="rack-card bg-white dark:bg-[#1a2632] border border-[#dbe0e6] dark:border-gray-800 rounded-3xl p-5 shadow-sm flex flex-col transition-all duration-300 hover:shadow-md" data-rack-id="@rack.Id" data-rack-name="@rack.Name">
+                var occupiedRows = rack.Locations.Count(l => l.Products.Any());
+                var occupancyPercentage = rack.NumberOfRows > 0 ? (occupiedRows * 100) / rack.NumberOfRows : 0;
+
+                <div class="rack-card bg-white dark:bg-[#1a2632] border-2 border-gray-200 dark:border-gray-800 rounded-3xl p-5 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group" data-rack-id="@rack.Id" data-rack-name="@rack.Name">
+                    <!-- Barra decorativa superior de estante industrial -->
+                    <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-primary to-indigo-600"></div>
+
                     <!-- Cabecera del Estante -->
-                    <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-100 dark:border-gray-800">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-primary flex items-center justify-center font-black text-base shadow-inner">
+                    <div class="flex justify-between items-center mb-4 pt-1 pb-3 border-b border-gray-100 dark:border-gray-800">
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-primary text-white flex items-center justify-center font-black text-lg shadow-md shadow-blue-500/20 shrink-0">
                                 @rack.Name
                             </div>
                             <div>
-                                <h3 class="text-[#111418] dark:text-white font-bold text-base leading-tight">Estante @rack.Name</h3>
-                                <p class="text-xs text-[#617589] dark:text-gray-400">@rack.NumberOfRows Filas • @totalProductsInRack prod.</p>
+                                <h3 class="text-[#111418] dark:text-white font-extrabold text-base leading-tight">Estante @rack.Name</h3>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span class="text-xs text-[#617589] dark:text-gray-400 font-medium">@rack.NumberOfRows Filas</span>
+                                    <span class="text-gray-300 dark:text-gray-600">•</span>
+                                    <span class="text-xs font-bold text-primary">@totalProductsInRack prod.</span>
+                                </div>
                             </div>
                         </div>
-                        <a asp-controller="Warehouse" asp-action="Edit" asp-route-id="@rack.Id" class="text-gray-400 hover:text-primary transition-colors p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" title="Editar Estante">
-                            <span class="material-symbols-outlined text-[18px]">settings</span>
+                        <a asp-controller="Warehouse" asp-action="Edit" asp-route-id="@rack.Id" class="text-gray-400 hover:text-primary transition-colors p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800" title="Configurar Estante">
+                            <span class="material-symbols-outlined text-[20px]">settings</span>
                         </a>
                     </div>
 
-                    <!-- Representación Física del Estante (De Arriba hacia Abajo: Fila N a Fila 1) -->
-                    <div class="flex flex-col gap-2 flex-1 bg-gray-50 dark:bg-gray-900/50 p-3 rounded-2xl border border-gray-100 dark:border-gray-800/80">
-                        @for (int rowNum = rack.NumberOfRows; rowNum >= 1; rowNum--)
+                    <!-- Indicador de Ocupación del Estante -->
+                    <div class="mb-4 bg-gray-50 dark:bg-gray-800/40 p-2.5 rounded-xl border border-gray-100 dark:border-gray-800/80">
+                        <div class="flex justify-between items-center text-xs font-bold mb-1.5">
+                            <span class="text-gray-500 dark:text-gray-400">Ocupación del Estante</span>
+                            <span class="@(occupancyPercentage > 80 ? "text-amber-600 dark:text-amber-400" : occupancyPercentage > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400")">@occupancyPercentage%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
+                            <div class="h-full rounded-full transition-all duration-500 @(occupancyPercentage > 80 ? "bg-amber-500" : "bg-emerald-500")" style="width: @occupancyPercentage%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Estructura de Repisa / Niveles Físicos (De Arriba hacia Abajo) -->
+                    <div class="flex flex-col gap-2.5 flex-1 bg-slate-100/80 dark:bg-slate-900/60 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner">
+                        @for (int r = rack.NumberOfRows; r >= 1; r--)
                         {
-                            var location = rack.Locations.FirstOrDefault(l => l.Row == rowNum);
+                            var currentRowNum = r;
+                            var location = rack.Locations.FirstOrDefault(l => l.Row == currentRowNum);
                             var products = location?.Products.ToList() ?? new List<SistemaInventario.Models.Entities.Product>();
                             var hasProducts = products.Any();
-                            var locationCode = $"{rack.Name}-F{rowNum}";
-
-                            // Preparar datos de búsqueda en JSON atributo
+                            var locationCode = $"{rack.Name}-F{currentRowNum}";
                             var productsSearchData = string.Join(" | ", products.Select(p => $"{p.Name} {p.Barcode} {p.Brand} {p.Description}"));
 
-                            <div class="location-cell relative group rounded-xl p-2.5 transition-all duration-300 border cursor-pointer flex items-center justify-between @(hasProducts ? "bg-white dark:bg-[#1f2d3d] border-emerald-300 dark:border-emerald-800/60 shadow-xs hover:border-emerald-500" : "bg-gray-100/70 dark:bg-gray-800/40 border-gray-200 dark:border-gray-800 opacity-60 hover:opacity-100")"
+                            <div class="location-cell relative group rounded-xl p-3 transition-all duration-200 border-2 cursor-pointer flex items-center justify-between shadow-xs @(hasProducts ? "bg-white dark:bg-[#1a2632] border-emerald-400/80 dark:border-emerald-700/80 hover:border-emerald-500 hover:shadow-md" : "bg-white/60 dark:bg-gray-800/30 border-dashed border-gray-300 dark:border-gray-700/70 opacity-70 hover:opacity-100 hover:border-gray-400")"
                                  data-location-code="@locationCode"
                                  data-search-text="@productsSearchData.ToLower()"
-                                 onclick="openLocationDetails('@locationCode', '@rack.Name', @rowNum, @Html.Raw(System.Text.Json.JsonSerializer.Serialize(products.Select(p => new {
+                                 onclick="openLocationDetails('@locationCode', '@rack.Name', @currentRowNum, @Html.Raw(System.Text.Json.JsonSerializer.Serialize(products.Select(p => new {
                                      id = p.Id,
                                      name = p.Name,
                                      barcode = p.Barcode,
@@ -133,28 +153,36 @@
                                      imageUrl = p.ImageUrl
                                  }))))">
                                 
-                                <div class="flex items-center gap-2">
-                                    <span class="w-6 h-6 rounded-lg bg-gray-200 dark:bg-gray-700 text-[10px] font-bold text-gray-700 dark:text-gray-300 flex items-center justify-center border border-gray-300 dark:border-gray-600">
-                                        F@rowNum
-                                    </span>
-                                    <span class="text-xs font-bold text-[#111418] dark:text-white group-hover:text-primary transition-colors">
-                                        @locationCode
-                                    </span>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg @(hasProducts ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700") font-black text-xs flex items-center justify-center shrink-0">
+                                        F@(currentRowNum)
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-xs font-extrabold text-[#111418] dark:text-white group-hover:text-primary transition-colors">
+                                            @locationCode
+                                        </span>
+                                        @if (hasProducts)
+                                        {
+                                            <span class="text-[10px] text-gray-500 dark:text-gray-400 line-clamp-1 max-w-[120px]">
+                                                @products.First().Name @(products.Count > 1 ? $"+{products.Count - 1} más" : "")
+                                            </span>
+                                        }
+                                    </div>
                                 </div>
 
-                                <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-2 shrink-0">
                                     @if (hasProducts)
                                     {
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-bold text-[11px] border border-emerald-200 dark:border-emerald-800/40">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500 text-white font-bold text-xs shadow-xs">
                                             <span class="material-symbols-outlined text-[14px]">inventory_2</span>
                                             @products.Count
                                         </span>
                                     }
                                     else
                                     {
-                                        <span class="text-[10px] font-semibold text-gray-400 dark:text-gray-500">Vacía</span>
+                                        <span class="text-[11px] font-medium text-gray-400 dark:text-gray-500 px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800">Vacía</span>
                                     }
-                                    <span class="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors text-[16px]">chevron_right</span>
+                                    <span class="material-symbols-outlined text-gray-300 dark:text-gray-600 group-hover:text-primary transition-colors text-[18px]">chevron_right</span>
                                 </div>
                             </div>
                         }
