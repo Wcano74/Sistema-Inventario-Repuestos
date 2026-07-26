@@ -89,7 +89,11 @@
                             <a asp-controller="Categories" asp-action="Index" class="text-xs px-2 py-1.5 rounded-md @(ViewContext.RouteData.Values["controller"]?.ToString() == "Categories" ? "text-primary font-bold" : "text-[#617589] hover:text-[#111418] dark:hover:text-white") transition-colors">Categorías</a>
                             <a asp-controller="Suppliers" asp-action="Index" class="text-xs px-2 py-1.5 rounded-md @(ViewContext.RouteData.Values["controller"]?.ToString() == "Suppliers" ? "text-primary font-bold" : "text-[#617589] hover:text-[#111418] dark:hover:text-white") transition-colors">Proveedores</a>
                             <a asp-controller="PurchaseOrders" asp-action="Index" class="text-xs px-2 py-1.5 rounded-md @(ViewContext.RouteData.Values["controller"]?.ToString() == "PurchaseOrders" ? "text-primary font-bold" : "text-[#617589] hover:text-[#111418] dark:hover:text-white") transition-colors">Pedidos</a>
-                            <a asp-controller="Warehouses" asp-action="Index" class="text-xs px-2 py-1.5 rounded-md @(ViewContext.RouteData.Values["controller"]?.ToString() == "Warehouses" ? "text-primary font-bold" : "text-[#617589] hover:text-[#111418] dark:hover:text-white") transition-colors">Bodegas y Ubicaciones</a>
+                            <a asp-controller="Warehouses" asp-action="Index" class="text-xs px-2 py-1.5 rounded-md @(ViewContext.RouteData.Values["controller"]?.ToString() == "Warehouses" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "text-primary font-bold" : "text-[#617589] hover:text-[#111418] dark:hover:text-white") transition-colors">Bodegas y Ubicaciones</a>
+                            <a asp-controller="Warehouses" asp-action="Map" class="text-xs px-2 py-1.5 rounded-md @(ViewContext.RouteData.Values["controller"]?.ToString() == "Warehouses" && ViewContext.RouteData.Values["action"]?.ToString() == "Map" ? "text-primary font-bold" : "text-[#617589] hover:text-[#111418] dark:hover:text-white") transition-colors flex items-center gap-1">
+                                <span>Mapa de Bodega</span>
+                                <span class="text-[9px] bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 font-extrabold px-1 rounded">2D</span>
+                            </a>
                         </div>
                         @if (!User.IsInRole("Bodeguero"))
                         {

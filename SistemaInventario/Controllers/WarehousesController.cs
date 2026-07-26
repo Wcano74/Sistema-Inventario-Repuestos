@@ -42,6 +42,30 @@ namespace SistemaInventario.Controllers
             return View(warehouses);
         }
 
+        [Route("mapa/{id?}")]
+        public async Task<IActionResult> Map(int? id)
+        {
+            var warehouses = await _context.Warehouses.Where(w => w.IsActive).OrderBy(w => w.Name).ToListAsync();
+            
+            if (!warehouses.Any())
+            {
+                ViewBag.Warehouses = warehouses;
+                return View(null);
+            }
+
+            var selectedWarehouseId = id ?? warehouses.First().Id;
+            var selectedWarehouse = await _context.Warehouses
+                .Include(w => w.Racks)
+                    .ThenInclude(r => r.Locations)
+                        .ThenInclude(l => l.Products)
+                .FirstOrDefaultAsync(w => w.Id == selectedWarehouseId);
+
+            ViewBag.Warehouses = warehouses;
+            ViewBag.SelectedWarehouseId = selectedWarehouseId;
+
+            return View(selectedWarehouse);
+        }
+
         [Route("crear")]
         public IActionResult Create()
         {
