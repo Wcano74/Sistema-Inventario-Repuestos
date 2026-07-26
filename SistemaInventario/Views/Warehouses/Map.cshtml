@@ -146,18 +146,23 @@
                             var totalLocationUnits = products.Sum(p => p.StockQuantity);
                             var productsSearchData = string.Join(" | ", products.Select(p => $"{p.Name} {p.Barcode} {p.Brand} {p.Description}"));
 
+                            var productsJson = System.Text.Json.JsonSerializer.Serialize(products.Select(p => new {
+                                id = p.Id,
+                                name = p.Name,
+                                barcode = p.Barcode,
+                                brand = p.Brand,
+                                stock = p.StockQuantity,
+                                price = p.Price.ToString("C"),
+                                imageUrl = p.ImageUrl
+                            }));
+
                             <div class="location-cell relative group rounded-2xl p-3.5 transition-all duration-300 border-2 cursor-pointer flex flex-col gap-2 shadow-xs hover:scale-[1.02] @(hasProducts ? "bg-white dark:bg-[#1f2d3d] border-emerald-400/80 dark:border-emerald-700/80 hover:border-emerald-500 hover:shadow-lg" : "bg-white/50 dark:bg-gray-800/30 border-dashed border-gray-300 dark:border-gray-700/70 opacity-60 hover:opacity-100 hover:border-gray-400")"
                                  data-location-code="@locationCode"
+                                 data-rack-name="@rack.Name"
+                                 data-row-num="@currentRowNum"
                                  data-search-text="@productsSearchData.ToLower()"
-                                 onclick="openLocationDetails('@locationCode', '@rack.Name', @currentRowNum, @Html.Raw(System.Text.Json.JsonSerializer.Serialize(products.Select(p => new {
-                                     id = p.Id,
-                                     name = p.Name,
-                                     barcode = p.Barcode,
-                                     brand = p.Brand,
-                                     stock = p.StockQuantity,
-                                     price = p.Price.ToString("C"),
-                                     imageUrl = p.ImageUrl
-                                 }))))">
+                                 data-products='@Html.Raw(productsJson)'
+                                 onclick="handleLocationClick(this)">
                                 
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center gap-2.5">
@@ -252,6 +257,22 @@
     <script>
         function changeWarehouse(warehouseId) {
             window.location.href = `/bodegas/mapa/${warehouseId}`;
+        }
+
+        function handleLocationClick(element) {
+            const locationCode = element.getAttribute('data-location-code');
+            const rackName = element.getAttribute('data-rack-name');
+            const rowNum = element.getAttribute('data-row-num');
+            const rawProducts = element.getAttribute('data-products');
+            
+            let products = [];
+            try {
+                products = JSON.parse(rawProducts || '[]');
+            } catch (e) {
+                console.error("Error al parsear productos de ubicación", e);
+            }
+            
+            openLocationDetails(locationCode, rackName, rowNum, products);
         }
 
         function openLocationDetails(locationCode, rackName, rowNum, products) {
