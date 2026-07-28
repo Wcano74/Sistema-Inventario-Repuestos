@@ -1,4 +1,4 @@
-@model List<SistemaInventario.Models.ViewModels.BackupFileViewModel>
+@model SistemaInventario.Models.ViewModels.BackupManagementViewModel
 
 @{
     ViewData["Title"] = "Respaldos";
@@ -52,9 +52,74 @@
         </div>
 
         @{
-            var dbBackups = Model.Where(b => b.Type == SistemaInventario.Models.ViewModels.BackupType.Database).ToList();
-            var imgBackups = Model.Where(b => b.Type == SistemaInventario.Models.ViewModels.BackupType.Images).ToList();
+            var dbBackups = Model.Backups.Where(b => b.Type == SistemaInventario.Models.ViewModels.BackupType.Database).ToList();
+            var imgBackups = Model.Backups.Where(b => b.Type == SistemaInventario.Models.ViewModels.BackupType.Images).ToList();
         }
+
+        <!-- Auto Backup Settings Card -->
+        <div class="bg-white dark:bg-[#1a2632] rounded-xl border border-[#e5e7eb] dark:border-gray-800 shadow-sm overflow-hidden mb-4">
+            <div class="p-6 border-b border-[#f0f2f4] dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 flex items-center gap-3">
+                <span class="material-symbols-outlined text-green-600">schedule</span>
+                <h3 class="text-sm font-bold text-[#111418] dark:text-white uppercase tracking-wider">Configuraci&oacute;n de Respaldos Autom&aacute;ticos</h3>
+            </div>
+            <div class="p-6">
+                <form asp-action="SaveAutoBackupSettings" method="post" class="flex flex-col gap-4">
+                    @Html.AntiForgeryToken()
+                    
+                    <div class="flex items-center gap-3">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" asp-for="AutoBackup_Enabled" class="sr-only peer" id="autoBackupToggle">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                            <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">Habilitar Auto-Respaldos</span>
+                        </label>
+                    </div>
+
+                    <div id="autoBackupOptions" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2 @(Model.AutoBackup_Enabled ? "" : "opacity-50 pointer-events-none")">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Frecuencia</label>
+                            <select asp-for="AutoBackup_Frequency" id="autoBackupFreq" class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500" onchange="toggleFrequencyOptions()">
+                                <option value="Daily">Diario</option>
+                                <option value="Weekly">Semanal</option>
+                                <option value="Monthly">Mensual</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Hora de Ejecuci&oacute;n</label>
+                            <input type="time" asp-for="AutoBackup_Time" class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500" />
+                        </div>
+
+                        <div id="dayOfWeekContainer" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">D&iacute;a de la Semana</label>
+                            <select asp-for="AutoBackup_DayOfWeek" class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <option value="0">Domingo</option>
+                                <option value="1">Lunes</option>
+                                <option value="2">Martes</option>
+                                <option value="3">Mi&eacute;rcoles</option>
+                                <option value="4">Jueves</option>
+                                <option value="5">Viernes</option>
+                                <option value="6">S&aacute;bado</option>
+                            </select>
+                        </div>
+
+                        <div id="dayOfMonthContainer" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">D&iacute;a del Mes</label>
+                            <input type="number" asp-for="AutoBackup_DayOfMonth" min="1" max="31" class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500" />
+                        </div>
+                        
+                        <div class="col-span-1 md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">D&iacute;as de Retenci&oacute;n (1-100)</label>
+                            <input type="number" asp-for="AutoBackup_RetentionDays" min="1" max="100" class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500" />
+                            <p class="text-xs text-gray-500 mt-1">Se mantendr&aacute;n los &uacute;ltimos respaldos correspondientes a esta cantidad.</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">Guardar Configuraci&oacute;n</button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
         <!-- Database Backups List -->
         <div class="bg-white dark:bg-[#1a2632] rounded-xl border border-[#e5e7eb] dark:border-gray-800 shadow-sm overflow-hidden">
@@ -405,5 +470,37 @@
                 ['restoreModal', 'deleteModal', 'resetModal'].forEach(id => closeModal(id));
             }
         });
+
+        // Auto Backup Settings JS
+        const autoBackupToggle = document.getElementById('autoBackupToggle');
+        const autoBackupOptions = document.getElementById('autoBackupOptions');
+        
+        if(autoBackupToggle) {
+            autoBackupToggle.addEventListener('change', function() {
+                if(this.checked) {
+                    autoBackupOptions.classList.remove('opacity-50', 'pointer-events-none');
+                } else {
+                    autoBackupOptions.classList.add('opacity-50', 'pointer-events-none');
+                }
+            });
+        }
+
+        function toggleFrequencyOptions() {
+            const freq = document.getElementById('autoBackupFreq').value;
+            const dayOfWeekContainer = document.getElementById('dayOfWeekContainer');
+            const dayOfMonthContainer = document.getElementById('dayOfMonthContainer');
+
+            dayOfWeekContainer.classList.add('hidden');
+            dayOfMonthContainer.classList.add('hidden');
+
+            if (freq === 'Weekly') {
+                dayOfWeekContainer.classList.remove('hidden');
+            } else if (freq === 'Monthly') {
+                dayOfMonthContainer.classList.remove('hidden');
+            }
+        }
+
+        // Initialize frequency options on load
+        window.addEventListener('DOMContentLoaded', toggleFrequencyOptions);
     </script>
 }

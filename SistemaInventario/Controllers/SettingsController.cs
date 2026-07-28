@@ -319,9 +319,9 @@ namespace SistemaInventario.Controllers
 
         // GET: /configuracion/respaldos
         [Route("respaldos")]
-        public IActionResult Backups()
+        public async Task<IActionResult> Backups()
         {
-            var backups = new List<BackupFileViewModel>();
+            var model = new BackupManagementViewModel();
 
             try
             {
@@ -335,7 +335,7 @@ namespace SistemaInventario.Controllers
 
                     foreach (var file in files)
                     {
-                        backups.Add(new BackupFileViewModel
+                        model.Backups.Add(new BackupFileViewModel
                         {
                             FileName = file.Name,
                             SizeInBytes = file.Length,
@@ -347,13 +347,48 @@ namespace SistemaInventario.Controllers
                         });
                     }
                 }
+                
+                // Cargar configuración de Auto Backup
+                model.AutoBackup_Enabled = (await _configService.GetConfigurationAsync("AutoBackup_Enabled", "false")) == "true";
+                model.AutoBackup_Frequency = await _configService.GetConfigurationAsync("AutoBackup_Frequency", "Daily");
+                model.AutoBackup_Time = await _configService.GetConfigurationAsync("AutoBackup_Time", "02:00");
+                model.AutoBackup_DayOfWeek = int.Parse(await _configService.GetConfigurationAsync("AutoBackup_DayOfWeek", "0"));
+                model.AutoBackup_DayOfMonth = int.Parse(await _configService.GetConfigurationAsync("AutoBackup_DayOfMonth", "1"));
+                model.AutoBackup_RetentionDays = int.Parse(await _configService.GetConfigurationAsync("AutoBackup_RetentionDays", "10"));
             }
             catch (Exception ex)
             {
                 TempData["Error"] = $"Error al leer respaldos: {ex.Message}";
             }
 
-            return View(backups);
+            return View(model);
+        }
+
+        // POST: /configuracion/respaldos/configurar-auto
+        [HttpPost]
+        [Route("respaldos/configurar-auto")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveAutoBackupSettings(BackupManagementViewModel model)
+        {
+            ModelState.Remove(nameof(model.Backups)); // no necesitamos validar la lista
+
+            if (ModelState.IsValid)
+            {
+                await UpdateConfig("AutoBackup_Enabled", model.AutoBackup_Enabled.ToString().ToLower());
+                await UpdateConfig("AutoBackup_Frequency", model.AutoBackup_Frequency);
+                await UpdateConfig("AutoBackup_Time", model.AutoBackup_Time);
+                await UpdateConfig("AutoBackup_DayOfWeek", model.AutoBackup_DayOfWeek.ToString());
+                await UpdateConfig("AutoBackup_DayOfMonth", model.AutoBackup_DayOfMonth.ToString());
+                await UpdateConfig("AutoBackup_RetentionDays", model.AutoBackup_RetentionDays.ToString());
+
+                TempData["Success"] = "Configuración de respaldos automáticos actualizada correctamente.";
+            }
+            else
+            {
+                TempData["Error"] = "Por favor verifica los campos obligatorios.";
+            }
+
+            return RedirectToAction(nameof(Backups));
         }
 
         // POST: /configuracion/respaldos/crear
