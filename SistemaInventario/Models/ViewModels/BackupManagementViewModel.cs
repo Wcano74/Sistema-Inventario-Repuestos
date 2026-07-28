@@ -22,5 +22,18 @@ namespace SistemaInventario.Models.ViewModels
         
         [Range(1, 100, ErrorMessage = "La retención debe ser entre 1 y 100 días.")]
         public int AutoBackup_RetentionDays { get; set; } = 10;
+
+        // Email Notification Settings
+        public bool AutoBackup_NotifyEmail { get; set; }
+        public string AutoBackup_NotifyEmailAddress { get; set; } = string.Empty;
+
+        // SMTP Settings
+        public string Smtp_Host { get; set; } = string.Empty;
+        public int Smtp_Port { get; set; } = 587;
+        public string Smtp_User { get; set; } = string.Empty;
+        public string Smtp_Password { get; set; } = string.Empty;
+        public string Smtp_FromEmail { get; set; } = string.Empty;
+        public bool Smtp_UseSsl { get; set; } = true;
     }
 }
+

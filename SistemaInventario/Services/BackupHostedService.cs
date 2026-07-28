@@ -111,14 +111,22 @@ namespace SistemaInventario.Services
         private async Task RunBackupsAsync(IServiceProvider scopedProvider)
         {
             var dbContext = scopedProvider.GetRequiredService<ApplicationDbContext>();
+            var configService = scopedProvider.GetRequiredService<IConfigurationService>();
             var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
 
             Directory.CreateDirectory(LocalBackupDir);
 
+            bool dbSuccess = false;
+            bool imgSuccess = false;
+            string dbFileName = "";
+            string imgFileName = "";
+            string dbError = "";
+            string imgError = "";
+
             // 1. Respaldo BD
             try
             {
-                var dbFileName = $"{DbName}_{timestamp}.bak";
+                dbFileName = $"{DbName}_{timestamp}.bak";
                 var backupPath = Path.Combine(SqlBackupDir, dbFileName);
 
                 var cs = dbContext.Database.GetConnectionString() ?? "";
@@ -133,28 +141,95 @@ namespace SistemaInventario.Services
                 command.CommandTimeout = 300; // 5 min
                 await command.ExecuteNonQueryAsync();
 
+                dbSuccess = true;
                 _logger.LogInformation("Auto-Backup: Base de datos respaldada correctamente en {FileName}", dbFileName);
             }
             catch (Exception ex)
             {
+                dbError = ex.Message;
                 _logger.LogError(ex, "Auto-Backup: Error al respaldar base de datos.");
             }
 
             // 2. Respaldo Imágenes
             try
             {
-                var imgFileName = $"Imagenes_Productos_{timestamp}.zip";
+                imgFileName = $"Imagenes_Productos_{timestamp}.zip";
                 var localPath = Path.Combine(LocalBackupDir, imgFileName);
 
                 if (Directory.Exists(ImagesLocalDir))
                 {
                     ZipFile.CreateFromDirectory(ImagesLocalDir, localPath);
+                    imgSuccess = true;
                     _logger.LogInformation("Auto-Backup: Imágenes respaldadas correctamente en {FileName}", imgFileName);
                 }
             }
             catch (Exception ex)
             {
+                imgError = ex.Message;
                 _logger.LogError(ex, "Auto-Backup: Error al respaldar imágenes.");
+            }
+
+            // 3. Enviar notificación por correo
+            await SendBackupNotificationAsync(configService, dbSuccess, imgSuccess, dbFileName, imgFileName, dbError, imgError, timestamp);
+        }
+
+        private async Task SendBackupNotificationAsync(IConfigurationService configService,
+            bool dbSuccess, bool imgSuccess, string dbFileName, string imgFileName,
+            string dbError, string imgError, string timestamp)
+        {
+            try
+            {
+                var notifyEnabled = (await configService.GetConfigurationAsync("AutoBackup_NotifyEmail", "false")) == "true";
+                if (!notifyEnabled) return;
+
+                var notifyEmail = await configService.GetConfigurationAsync("AutoBackup_NotifyEmailAddress", "");
+                if (string.IsNullOrWhiteSpace(notifyEmail)) return;
+
+                var emailService = new EmailService(_serviceProvider, _serviceProvider.GetRequiredService<ILogger<EmailService>>());
+
+                var allOk = dbSuccess && imgSuccess;
+                var statusIcon = allOk ? "✅" : "⚠️";
+                var statusText = allOk ? "Completado exitosamente" : "Completado con errores";
+
+                var subject = $"{statusIcon} Auto-Backup Sistema de Inventario - {statusText}";
+
+                var body = $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+                    <div style='background: {(allOk ? "#10b981" : "#f59e0b")}; color: white; padding: 20px; border-radius: 8px 8px 0 0;'>
+                        <h2 style='margin: 0;'>{statusIcon} Respaldo Automático</h2>
+                        <p style='margin: 5px 0 0 0; opacity: 0.9;'>{DateTime.Now:dddd, dd MMMM yyyy HH:mm}</p>
+                    </div>
+                    <div style='background: #f9fafb; padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;'>
+                        <table style='width: 100%; border-collapse: collapse;'>
+                            <tr>
+                                <td style='padding: 10px; border-bottom: 1px solid #e5e7eb;'>
+                                    <strong>Base de Datos:</strong>
+                                </td>
+                                <td style='padding: 10px; border-bottom: 1px solid #e5e7eb; color: {(dbSuccess ? "green" : "red")};'>
+                                    {(dbSuccess ? $"✅ {dbFileName}" : $"❌ Error: {dbError}")}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style='padding: 10px;'>
+                                    <strong>Imágenes:</strong>
+                                </td>
+                                <td style='padding: 10px; color: {(imgSuccess ? "green" : "red")};'>
+                                    {(imgSuccess ? $"✅ {imgFileName}" : $"❌ Error: {imgError}")}
+                                </td>
+                            </tr>
+                        </table>
+                        <hr style='border: none; border-top: 1px solid #e5e7eb; margin: 15px 0;' />
+                        <p style='font-size: 12px; color: #6b7280; margin: 0;'>
+                            Este correo fue generado automáticamente por el Sistema de Inventario.
+                        </p>
+                    </div>
+                </div>";
+
+                await emailService.SendEmailAsync(notifyEmail, subject, body);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Auto-Backup: Error al enviar notificación por correo.");
             }
         }
 

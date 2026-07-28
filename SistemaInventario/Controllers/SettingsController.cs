@@ -355,6 +355,18 @@ namespace SistemaInventario.Controllers
                 model.AutoBackup_DayOfWeek = int.Parse(await _configService.GetConfigurationAsync("AutoBackup_DayOfWeek", "0"));
                 model.AutoBackup_DayOfMonth = int.Parse(await _configService.GetConfigurationAsync("AutoBackup_DayOfMonth", "1"));
                 model.AutoBackup_RetentionDays = int.Parse(await _configService.GetConfigurationAsync("AutoBackup_RetentionDays", "10"));
+
+                // Email Notification
+                model.AutoBackup_NotifyEmail = (await _configService.GetConfigurationAsync("AutoBackup_NotifyEmail", "false")) == "true";
+                model.AutoBackup_NotifyEmailAddress = await _configService.GetConfigurationAsync("AutoBackup_NotifyEmailAddress", "");
+
+                // SMTP
+                model.Smtp_Host = await _configService.GetConfigurationAsync("Smtp_Host", "");
+                model.Smtp_Port = int.Parse(await _configService.GetConfigurationAsync("Smtp_Port", "587"));
+                model.Smtp_User = await _configService.GetConfigurationAsync("Smtp_User", "");
+                model.Smtp_Password = await _configService.GetConfigurationAsync("Smtp_Password", "");
+                model.Smtp_FromEmail = await _configService.GetConfigurationAsync("Smtp_FromEmail", "");
+                model.Smtp_UseSsl = (await _configService.GetConfigurationAsync("Smtp_UseSsl", "true")) == "true";
             }
             catch (Exception ex)
             {
@@ -380,6 +392,18 @@ namespace SistemaInventario.Controllers
                 await UpdateConfig("AutoBackup_DayOfWeek", model.AutoBackup_DayOfWeek.ToString());
                 await UpdateConfig("AutoBackup_DayOfMonth", model.AutoBackup_DayOfMonth.ToString());
                 await UpdateConfig("AutoBackup_RetentionDays", model.AutoBackup_RetentionDays.ToString());
+
+                // Email Notification
+                await UpdateConfig("AutoBackup_NotifyEmail", model.AutoBackup_NotifyEmail.ToString().ToLower());
+                await UpdateConfig("AutoBackup_NotifyEmailAddress", model.AutoBackup_NotifyEmailAddress ?? "");
+
+                // SMTP
+                await UpdateConfig("Smtp_Host", model.Smtp_Host ?? "");
+                await UpdateConfig("Smtp_Port", model.Smtp_Port.ToString());
+                await UpdateConfig("Smtp_User", model.Smtp_User ?? "");
+                await UpdateConfig("Smtp_Password", model.Smtp_Password ?? "");
+                await UpdateConfig("Smtp_FromEmail", model.Smtp_FromEmail ?? "");
+                await UpdateConfig("Smtp_UseSsl", model.Smtp_UseSsl.ToString().ToLower());
 
                 TempData["Success"] = "Configuración de respaldos automáticos actualizada correctamente.";
             }

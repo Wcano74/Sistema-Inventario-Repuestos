@@ -114,6 +114,73 @@
                         </div>
                     </div>
 
+                    <!-- Email Notification Section -->
+                    <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="material-symbols-outlined text-amber-500">mail</span>
+                            <h4 class="text-sm font-bold text-[#111418] dark:text-white uppercase tracking-wider">Notificaci&oacute;n por Correo Electr&oacute;nico</h4>
+                        </div>
+
+                        <div class="flex items-center gap-3 mb-4">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" asp-for="AutoBackup_NotifyEmail" class="sr-only peer" id="notifyEmailToggle">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 dark:peer-focus:ring-amber-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-amber-500"></div>
+                                <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">Enviar notificaci&oacute;n por correo al completar respaldo</span>
+                            </label>
+                        </div>
+
+                        <div id="emailNotifyOptions" class="@(Model.AutoBackup_NotifyEmail ? "" : "opacity-50 pointer-events-none")">
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Correo del Administrador</label>
+                                <input type="email" asp-for="AutoBackup_NotifyEmailAddress" placeholder="admin@ejemplo.com" class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500" />
+                                <p class="text-xs text-gray-500 mt-1">Se enviar&aacute; un correo de &eacute;xito o fallo a esta direcci&oacute;n.</p>
+                            </div>
+
+                            <!-- SMTP Collapsible -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                                <button type="button" onclick="toggleSmtpPanel()" class="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-[18px]">settings</span>
+                                        Configuraci&oacute;n SMTP
+                                    </div>
+                                    <span class="material-symbols-outlined text-[18px] transition-transform" id="smtpArrow">expand_more</span>
+                                </button>
+                                <div id="smtpPanel" class="hidden px-4 pb-4 pt-2">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Servidor SMTP</label>
+                                            <input type="text" asp-for="Smtp_Host" placeholder="smtp.gmail.com" class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Puerto</label>
+                                            <input type="number" asp-for="Smtp_Port" class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Usuario SMTP</label>
+                                            <input type="text" asp-for="Smtp_User" placeholder="usuario@gmail.com" class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Contrase&ntilde;a / App Password</label>
+                                            <input type="password" asp-for="Smtp_Password" class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Correo Remitente (From)</label>
+                                            <input type="email" asp-for="Smtp_FromEmail" placeholder="noreply@sistema.com" class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" />
+                                        </div>
+                                        <div class="flex items-end pb-1">
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" asp-for="Smtp_UseSsl" class="sr-only peer">
+                                                <div class="w-9 h-5 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                                <span class="ml-2 text-xs font-medium text-gray-600 dark:text-gray-400">Usar SSL/TLS</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-3">Para Gmail, usa smtp.gmail.com puerto 587 con una Contrase&ntilde;a de Aplicaci&oacute;n (App Password).</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="mt-4">
                         <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">Guardar Configuraci&oacute;n</button>
                     </div>
@@ -502,5 +569,27 @@
 
         // Initialize frequency options on load
         window.addEventListener('DOMContentLoaded', toggleFrequencyOptions);
+
+        // Email Notification Toggle
+        const notifyEmailToggle = document.getElementById('notifyEmailToggle');
+        const emailNotifyOptions = document.getElementById('emailNotifyOptions');
+
+        if(notifyEmailToggle) {
+            notifyEmailToggle.addEventListener('change', function() {
+                if(this.checked) {
+                    emailNotifyOptions.classList.remove('opacity-50', 'pointer-events-none');
+                } else {
+                    emailNotifyOptions.classList.add('opacity-50', 'pointer-events-none');
+                }
+            });
+        }
+
+        // SMTP Collapsible Panel
+        function toggleSmtpPanel() {
+            const panel = document.getElementById('smtpPanel');
+            const arrow = document.getElementById('smtpArrow');
+            panel.classList.toggle('hidden');
+            arrow.classList.toggle('rotate-180');
+        }
     </script>
 }

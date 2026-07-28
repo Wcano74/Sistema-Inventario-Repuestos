@@ -49,6 +49,7 @@ builder.Services.AddControllersWithViews()
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<SistemaInventario.Services.IConfigurationService, SistemaInventario.Services.ConfigurationService>();
 builder.Services.AddHostedService<SistemaInventario.Services.BackupHostedService>();
+builder.Services.AddSingleton<SistemaInventario.Services.IEmailService, SistemaInventario.Services.EmailService>();
 
 // Configurar localización a Español Guatemala
 builder.Services.Configure<RequestLocalizationOptions>(options =>
