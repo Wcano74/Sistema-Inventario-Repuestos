@@ -12,6 +12,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
   IMAGE: ghcr.io/wcano74/sistema-inventario
 
 jobs:
